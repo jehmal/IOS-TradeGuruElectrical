@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""Generate cryptographically secure keys for webhook auth, API secrets, admin tokens, etc."""
+
+import secrets
+import hashlib
+import sys
+import json
+
+def generate(length=32, format="hex"):
+    if format == "hex":
+        return secrets.token_hex(length)
+    elif format == "urlsafe":
+        return secrets.token_urlsafe(length)
+    elif format == "bytes":
+        return secrets.token_bytes(length).hex()
+    return secrets.token_hex(length)
+
+def main():
+    label = sys.argv[1] if len(sys.argv) > 1 else "WEBHOOK_AUTH_KEY"
+    length = int(sys.argv[2]) if len(sys.argv) > 2 else 32
+
+    key = generate(length)
+
+    print(f"╭─────────────────────────────────────────────────────╮")
+    print(f"│  Generated Key: {label:<37s} │")
+    print(f"├─────────────────────────────────────────────────────┤")
+    print(f"│                                                     │")
+    print(f"│  {key}  │" if len(key) <= 51 else f"│  {key[:49]}  │")
+    if len(key) > 51:
+        print(f"│  {key[49:]:<51s} │")
+    print(f"│                                                     │")
+    print(f"│  Length: {len(key)} chars ({length} bytes){'':>25s} │")
+    print(f"│  Format: hex{'':>39s} │")
+    print(f"╰─────────────────────────────────────────────────────╯")
+    print()
+    print(f"  Copy this into:")
+    print(f"  1. Vercel → Environment Variables → {label}")
+    print(f"  2. RevenueCat → Webhooks → Authorization header")
+    print()
+
+    # Also output as JSON for easy parsing
+    result = {"key": key, "label": label, "length": len(key)}
+    print(f"  JSON: {json.dumps(result)}")
+
+if __name__ == "__main__":
+    main()

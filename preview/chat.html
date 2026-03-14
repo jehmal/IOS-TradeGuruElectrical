@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeGuru — Component Viewer</title>
+<style>
+:root {
+    --trade-green: #20AB6E;
+    --trade-surface: #F7F2F9;
+    --trade-input: #EEE9F0;
+    --trade-light: #FFFCFF;
+    --trade-border: #B8B3BA;
+    --trade-text: #242026;
+    --trade-text-secondary: #6B7280;
+    --trade-bg: #FFFFFF;
+    --mode-fault-finder: #F59E0B;
+    --mode-learn: #3B82F6;
+    --mode-research: #8B5CF6;
+    --mode-fault-12: rgba(245,158,11,0.12);
+    --mode-learn-12: rgba(59,130,246,0.12);
+    --mode-research-12: rgba(139,92,246,0.12);
+    --watermark-invert: 0;
+    --status-bar-color: #242026;
+    --material-bg: rgba(255,255,255,0.85);
+}
+[data-theme="dark"] {
+    --trade-surface: #2F2D32;
+    --trade-input: #3D3A40;
+    --trade-light: #2F2D32;
+    --trade-border: #6B7280;
+    --trade-text: #FFFFFF;
+    --trade-text-secondary: #9CA3AF;
+    --trade-bg: #1A1A1C;
+    --mode-fault-finder: #FBBF24;
+    --mode-learn: #60A5FA;
+    --mode-research: #A78BFA;
+    --mode-fault-12: rgba(251,191,36,0.12);
+    --mode-learn-12: rgba(96,165,250,0.12);
+    --mode-research-12: rgba(167,139,250,0.12);
+    --watermark-invert: 1;
+    --status-bar-color: #FFFFFF;
+    --material-bg: rgba(26,26,28,0.85);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Controls Bar */
+.controls-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #16213e;
+    border-bottom: 1px solid #0f3460;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 500;
+}
+.controls-bar label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin-right: 4px;
+}
+.controls-bar select, .controls-bar button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+.controls-bar select:hover, .controls-bar button:hover {
+    background: #1a4a8a;
+}
+.controls-bar button.active {
+    background: #e94560;
+    border-color: #e94560;
+}
+.sep { width:1px; height:24px; background:#333; }
+
+/* === WORKBENCH: Pen/Draw Overlay === */
+.draw-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 9000;
+    pointer-events: none;
+    cursor: default;
+}
+.draw-canvas.active {
+    pointer-events: all;
+    cursor: crosshair;
+}
+.draw-canvas.eraser-mode {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='%23e94560' stroke-width='2'/%3E%3C/svg%3E") 10 10, auto;
+}
+
+/* === WORKBENCH: Notes Panel === */
+.notes-panel {
+    position: fixed;
+    top: 48px; right: 0;
+    width: 320px; height: calc(100vh - 48px);
+    background: #16213e;
+    border-left: 1px solid #0f3460;
+    z-index: 8000;
+    display: none;
+    flex-direction: column;
+    font-size: 13px;
+}
+.notes-panel.visible { display: flex; }
+.notes-panel-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid #0f3460;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+.notes-panel-header button {
+    background: none; border: none; color: #888; cursor: pointer; font-size: 16px;
+}
+.notes-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+.note-item {
+    background: #0f3460;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    position: relative;
+    color: #e0e0e0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.note-item .note-time {
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+}
+.note-item .note-delete {
+    position: absolute;
+    top: 4px; right: 6px;
+    background: none; border: none; color: #e94560; cursor: pointer; font-size: 12px;
+    opacity: 0;
+}
+.note-item:hover .note-delete { opacity: 1; }
+.notes-input-row {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    border-top: 1px solid #0f3460;
+}
+.notes-input-row input {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    font-size: 12px;
+    font-family: inherit;
+}
+.notes-input-row button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #e94560;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* === WORKBENCH: Pen toolbar === */
+.pen-toolbar {
+    position: fixed;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 14px;
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 12px;
+    z-index: 9500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.pen-toolbar.visible { display: flex; }
+.pen-toolbar .color-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.pen-toolbar .color-btn.active { border-color: #fff; }
+.pen-toolbar .size-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pen-toolbar .size-btn.active { background: #e94560; border-color: #e94560; }
+.pen-toolbar .tool-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+}
+.pen-toolbar .tool-btn.active { background: #e94560; border-color: #e94560; }
+
+/* Device Area */
+.device-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    overflow: auto;
+}
+.device-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.device-label {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Device Frames */
+.device-frame {
+    background: var(--trade-bg);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+}
+.device-frame.iphone {
+    width: 393px; height: 852px;
+    border-radius: 47px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 0 0 11px #1A1A1A, 0 0 0 13px #333;
+}
+.device-frame.ipad {
+    width: 834px; height: 1194px;
+    border-radius: 18px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 0 0 8px #1A1A1A, 0 0 0 10px #333;
+    transform: scale(0.6);
+    transform-origin: center center;
+}
+.device-frame.watch {
+    width: 198px; height: 242px;
+    border-radius: 42px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3), 0 0 0 6px #2a2a2a, 0 0 0 8px #444;
+}
+
+/* Dynamic Island */
+.dynamic-island {
+    position: absolute;
+    top: 11px; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 37px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 100;
+}
+.device-frame.ipad .dynamic-island { width:90px; height:26px; top:8px; border-radius:14px; }
+.device-frame.watch .dynamic-island { display:none; }
+
+/* Status Bar */
+.status-bar {
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--status-bar-color);
+    flex-shrink: 0;
+}
+.status-bar .icons { display:flex; gap:5px; align-items:center; }
+.device-frame.watch .status-bar { height:28px; padding:0 12px 2px; font-size:11px; }
+.device-frame.watch .status-bar .icons { display:none; }
+
+.screen-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Nav Bar */
+.nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    flex-shrink: 0;
+}
+.nav-icon-btn {
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer;
+    color: var(--trade-text);
+}
+.device-frame.watch .nav-bar { padding:4px 8px; }
+.device-frame.watch .nav-icon-btn { width:28px; height:28px; }
+.device-frame.watch .nav-icon-btn svg { width:14px; height:10px; }
+
+/* Mode Info Card */
+.mode-card {
+    margin: 16px 16px 0;
+    padding: 12px;
+    background: var(--trade-surface);
+    border: 1px solid var(--trade-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.mode-card.hidden { opacity:0; height:0; margin:0; padding:0; overflow:hidden; pointer-events:none; }
+.device-frame.watch .mode-card { margin:4px 8px 0; padding:6px; gap:6px; border-radius:8px; }
+.mode-card-icon {
+    width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+    flex-shrink:0;
+}
+.mode-card-icon svg { color:white; }
+.device-frame.watch .mode-card-icon { width:20px; height:20px; border-radius:5px; }
+.device-frame.watch .mode-card-icon svg { width:10px; height:10px; }
+.mode-card-text { flex:1; }
+.mode-card-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+.device-frame.watch .mode-card-title { font-size:11px; margin-bottom:2px; }
+.mode-card-body { font-size:14px; color:var(--trade-text-secondary); line-height:1.45; }
+.device-frame.watch .mode-card-body { font-size:9px; line-height:1.3; }
+.mode-card-close {
+    width:24px; height:24px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer;
+    color:var(--trade-text-secondary); font-size:12px; font-weight:600;
+}
+
+/* Chat Content Area */
+.chat-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.messages-list {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.device-frame.watch .messages-list { padding:4px 8px; gap:8px; }
+
+/* Empty State */
+.empty-state {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.watermark-logo {
+    width:180px; height:180px;
+    opacity:0.08;
+    filter: invert(var(--watermark-invert));
+}
+.device-frame.watch .watermark-logo { width:60px; height:60px; }
+
+/* Message Bubbles */
+.msg-row { display:flex; flex-direction:column; }
+.msg-row.user { align-items:flex-end; }
+.msg-row.assistant { align-items:flex-start; }
+.msg-bubble-user {
+    max-width: 280px;
+    padding: 10px 14px;
+    background: var(--trade-green);
+    color: #fff;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.4;
+}
+.device-frame.watch .msg-bubble-user { font-size:10px; padding:6px 8px; border-radius:10px; max-width:85%; }
+.msg-bubble-assistant {
+    max-width: 330px;
+    padding: 14px;
+    background: var(--trade-surface);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.device-frame.watch .msg-bubble-assistant { padding:6px 8px; border-radius:10px; gap:6px; max-width:90%; }
+.msg-meta {
+    display:flex;
+    align-items:center;
+    gap:4px;
+    margin-top:4px;
+}
+.msg-meta-icon { font-size:14px; }
+.msg-meta-time { font-size:11px; color:var(--trade-text-secondary); }
+.device-frame.watch .msg-meta-time { font-size:8px; }
+
+/* Content Blocks */
+.block-text {
+    font-size: 15px;
+    color: var(--trade-text);
+    line-height: 1.5;
+}
+.device-frame.watch .block-text { font-size:10px; }
+
+.block-heading {
+    font-weight: 700;
+    color: var(--trade-text);
+}
+.block-heading.h1 { font-size:20px; }
+.block-heading.h2 { font-size:18px; }
+.block-heading.h3 { font-size:16px; }
+.device-frame.watch .block-heading { font-size:12px !important; }
+
+.block-step-list {
+    background: var(--trade-surface);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid var(--trade-border);
+}
+.device-frame.watch .block-step-list { padding:6px; border-radius:8px; }
+.step-title { font-size:16px; font-weight:600; color:var(--trade-text); margin-bottom:8px; }
+.device-frame.watch .step-title { font-size:11px; margin-bottom:4px; }
+.step-item {
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:8px;
+}
+.step-num {
+    width:22px; height:22px;
+    border-radius:50%;
+    background:var(--trade-green);
+    color:#fff;
+    font-size:12px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.device-frame.watch .step-num { width:16px; height:16px; font-size:9px; }
+.step-text { font-size:14px; color:var(--trade-text); line-height:1.4; padding-top:1px; }
+.device-frame.watch .step-text { font-size:9px; }
+
+.block-warning {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid var(--mode-fault-finder);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.device-frame.watch .block-warning { padding:6px; gap:4px; border-radius:8px; }
+.warning-icon { font-size:18px; color:var(--mode-fault-finder); flex-shrink:0; }
+.device-frame.watch .warning-icon { font-size:12px; }
+.warning-body { flex:1; }
+.warning-title { font-size:15px; font-weight:700; color:var(--mode-fault-finder); margin-bottom:2px; }
+.device-frame.watch .warning-title { font-size:10px; }
+.warning-text { font-size:14px; color:var(--trade-text); line-height:1.4; }
+.device-frame.watch .warning-text { font-size:9px; }
+
+.block-code {
+    background: var(--trade-surface);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 13px;
+    color: var(--trade-text);
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.5;
+    position: relative;
+}
+.device-frame.watch .block-code { font-size:8px; padding:4px 6px; border-radius:6px; }
+.code-lang {
+    position: absolute;
+    top: 6px; right: 8px;
+    font-size: 11px;
+    color: var(--trade-text-secondary);
+    font-family: -apple-system, sans-serif;
+}
+
+.block-parts {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--trade-border);
+}
+.parts-header, .parts-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+.device-frame.watch .parts-header, .device-frame.watch .parts-row { font-size:8px; padding:4px 6px; }
+.parts-header {
+    background: var(--trade-surface);
+    font-weight: 600;
+    color: var(--trade-text);
+}
+.parts-row { color: var(--trade-text); border-top: 1px solid var(--trade-border); }
+.parts-row:nth-child(even) { background: var(--trade-surface); }
+
+.block-regulation {
+    background: var(--trade-surface);
+    border-radius: 12px;
+    padding: 12px 12px 12px 16px;
+    border-left: 4px solid var(--mode-research);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.device-frame.watch .block-regulation { padding:6px 6px 6px 10px; border-radius:8px; gap:2px; }
+.reg-code { font-size:15px; font-weight:700; color:var(--trade-text); }
+.device-frame.watch .reg-code { font-size:10px; }
+.reg-clause { font-size:13px; color:var(--trade-text-secondary); }
+.device-frame.watch .reg-clause { font-size:9px; }
+.reg-summary { font-size:14px; color:var(--trade-text); line-height:1.4; }
+.device-frame.watch .reg-summary { font-size:9px; }
+
+.block-table {
+    border-radius: 12px;
+    overflow-x: auto;
+    border: 1px solid var(--trade-border);
+}
+.table-inner { min-width: 100%; border-collapse: collapse; }
+.table-inner th, .table-inner td {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--trade-text);
+    text-align: left;
+    border-bottom: 1px solid var(--trade-border);
+}
+.device-frame.watch .table-inner th, .device-frame.watch .table-inner td { font-size:8px; padding:3px 6px; }
+.table-inner th { background:var(--trade-surface); font-weight:600; }
+
+.block-callout {
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--trade-surface);
+}
+.device-frame.watch .block-callout { padding:6px; gap:4px; border-radius:8px; }
+.callout-border-tip { border-left:4px solid var(--trade-green); }
+.callout-border-info { border-left:4px solid var(--mode-learn); }
+.callout-border-important { border-left:4px solid var(--mode-fault-finder); }
+.callout-icon { font-size:16px; flex-shrink:0; }
+.callout-icon-tip { color:var(--trade-green); }
+.callout-icon-info { color:var(--mode-learn); }
+.callout-icon-important { color:var(--mode-fault-finder); }
+.callout-text { font-size:14px; color:var(--trade-text); line-height:1.4; }
+.device-frame.watch .callout-text { font-size:9px; }
+
+/* Input Area */
+.input-area {
+    flex-shrink: 0;
+    border-top: 1px solid var(--trade-border);
+    background: var(--material-bg);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+}
+.mode-selector-row {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px 4px;
+}
+.device-frame.watch .mode-selector-row { gap:3px; padding:4px 6px 2px; }
+.mode-pill {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--trade-border);
+    background: var(--trade-input);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: var(--trade-text);
+}
+.device-frame.watch .mode-pill { padding:4px 3px; border-radius:6px; }
+.mode-pill:hover { background:var(--trade-surface); }
+.mode-pill.active { border-color:var(--active-color); background:var(--active-bg); color:var(--active-color); }
+.pill-top { display:flex; align-items:center; gap:4px; }
+.pill-icon { font-size:11px; }
+.device-frame.watch .pill-icon { font-size:8px; }
+.pill-label { font-size:12px; font-weight:600; }
+.device-frame.watch .pill-label { font-size:8px; }
+.pill-desc { font-size:10px; color:var(--trade-text-secondary); }
+.device-frame.watch .pill-desc { display:none; }
+
+.input-row {
+    display: flex;
+    align-items: flex-end;
+    padding: 10px 12px;
+    gap: 0;
+}
+.device-frame.watch .input-row { padding:4px 6px; }
+.add-btn {
+    width:30px; height:30px;
+    border-radius:50%;
+    background:var(--trade-input);
+    border:none;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--trade-text);
+    font-size:18px;
+    flex-shrink:0;
+}
+.device-frame.watch .add-btn { width:20px; height:20px; font-size:12px; }
+.text-input-wrap {
+    flex:1;
+    margin:0 10px;
+    background:var(--trade-light);
+    border:0.5px solid var(--trade-border);
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    min-height:38px;
+}
+.device-frame.watch .text-input-wrap { margin:0 4px; min-height:24px; padding:0 8px; border-radius:12px; }
+.text-input {
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:16px;
+    color:var(--trade-text);
+    padding:8px 0;
+}
+.device-frame.watch .text-input { font-size:10px; padding:4px 0; }
+.text-input::placeholder { color:var(--trade-text-secondary); }
+.send-btn {
+    width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer;
+    flex-shrink:0;
+    opacity:0; transform:scale(0.6);
+    transition:all 0.15s;
+    pointer-events:none;
+}
+.send-btn.visible { opacity:1; transform:scale(1); pointer-events:auto; }
+.device-frame.watch .send-btn { width:20px; height:20px; }
+.home-indicator {
+    width:134px; height:5px;
+    background:var(--trade-text);
+    border-radius:3px;
+    margin:4px auto 8px;
+    opacity:0.15;
+}
+.device-frame.watch .home-indicator { display:none; }
+
+/* Sidebar */
+.sidebar-overlay {
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    z-index:200;
+    display:none;
+}
+.sidebar-overlay.visible { display:block; }
+.sidebar-dim {
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.3);
+    cursor:pointer;
+}
+.sidebar-panel {
+    position:absolute;
+    top:0; left:0; bottom:0;
+    width:300px;
+    background:var(--trade-bg);
+    display:flex;
+    flex-direction:column;
+    box-shadow:4px 0 20px rgba(0,0,0,0.15);
+    transform:translateX(-100%);
+    transition:transform 0.25s ease;
+}
+.sidebar-overlay.visible .sidebar-panel { transform:translateX(0); }
+.device-frame.watch .sidebar-panel { width:160px; }
+.sidebar-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    border-bottom:1px solid var(--trade-border);
+}
+.sidebar-title { font-size:20px; font-weight:600; color:var(--trade-text); }
+.device-frame.watch .sidebar-title { font-size:13px; }
+.sidebar-close {
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer;
+    color:var(--trade-text-secondary); font-size:14px; font-weight:600;
+}
+.device-frame.watch .sidebar-close { width:28px; height:28px; font-size:10px; }
+.sidebar-list { flex:1; overflow-y:auto; }
+.sidebar-row {
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:10px 16px;
+    cursor:pointer;
+    border:none;
+    background:none;
+    width:100%;
+    text-align:left;
+    font-family:inherit;
+    min-height:44px;
+}
+.sidebar-row:hover { background:var(--trade-surface); }
+.device-frame.watch .sidebar-row { padding:4px 8px; gap:4px; min-height:28px; }
+.sidebar-row-icon { font-size:14px; margin-top:2px; }
+.device-frame.watch .sidebar-row-icon { font-size:10px; }
+.sidebar-row-title { font-size:15px; font-weight:600; color:var(--trade-text); }
+.device-frame.watch .sidebar-row-title { font-size:10px; }
+.sidebar-row-meta { font-size:12px; color:var(--trade-text-secondary); }
+.device-frame.watch .sidebar-row-meta { font-size:8px; }
+.sidebar-footer {
+    padding:16px;
+    border-top:1px solid var(--trade-border);
+}
+.sidebar-new-btn {
+    width:100%;
+    padding:12px;
+    background:var(--trade-green);
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-family:inherit;
+}
+.device-frame.watch .sidebar-new-btn { padding:6px; font-size:10px; border-radius:8px; }
+
+/* Isolated Component Wrapper */
+.isolated-component {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    overflow-y:auto;
+}
+.isolated-component > div { max-width:100%; }
+
+/* iPad tweaks */
+.device-frame.ipad .mode-selector-row { padding:14px 20px 6px; gap:10px; }
+.device-frame.ipad .mode-pill { padding:12px 16px; border-radius:12px; }
+.device-frame.ipad .pill-label { font-size:14px; }
+.device-frame.ipad .pill-icon { font-size:14px; }
+.device-frame.ipad .pill-desc { font-size:12px; }
+.device-frame.ipad .input-row { padding:14px 20px; }
+.device-frame.ipad .add-btn { width:36px; height:36px; font-size:20px; }
+.device-frame.ipad .text-input-wrap { min-height:44px; padding:0 18px; }
+.device-frame.ipad .text-input { font-size:17px; }
+.device-frame.ipad .nav-bar { padding:12px 24px; }
+.device-frame.ipad .mode-card { margin:20px 24px 0; padding:16px; gap:16px; }
+.device-frame.ipad .mode-card-icon { width:40px; height:40px; }
+.device-frame.ipad .mode-card-title { font-size:18px; }
+.device-frame.ipad .mode-card-body { font-size:15px; }
+.device-frame.ipad .watermark-logo { width:240px; height:240px; }
+.device-frame.ipad .home-indicator { width:180px; }
+</style>
+</head>
+<body>
+
+<div class="controls-bar">
+    <label>Device</label>
+    <select id="deviceSelect" onchange="setDevice(this.value)">
+        <option value="iphone">iPhone 15 Pro (393x852)</option>
+        <option value="ipad">iPad Pro 11" (834x1194)</option>
+        <option value="watch">Apple Watch (198x242)</option>
+    </select>
+    <div class="sep"></div>
+    <label>Component</label>
+    <select id="componentSelect" onchange="setComponent(this.value)">
+        <option value="full-chat">Full Chat Screen</option>
+        <option value="msg-user">Message Bubble (User)</option>
+        <option value="msg-assistant">Message Bubble (Assistant)</option>
+        <option value="block-text">Text Block</option>
+        <option value="block-step-list">Step List</option>
+        <option value="block-warning">Warning Card</option>
+        <option value="block-code">Code Block</option>
+        <option value="block-parts">Parts List</option>
+        <option value="block-regulation">Regulation Card</option>
+        <option value="block-table">Table Block</option>
+        <option value="block-callout">Callout (all variants)</option>
+        <option value="sidebar">Sidebar</option>
+        <option value="mode-selector">Mode Selector</option>
+        <option value="chat-input">Chat Input Bar</option>
+    </select>
+    <div class="sep"></div>
+    <button id="themeBtn" onclick="toggleTheme()">&#9790; Dark</button>
+    <div class="sep"></div>
+    <span style="color:#666;font-size:10px;letter-spacing:0.5px;text-transform:uppercase">Workbench</span>
+    <button id="penBtn" onclick="togglePen()">&#9998; Pen</button>
+    <button id="notesBtn" onclick="toggleNotes()">&#128221; Notes</button>
+</div>
+
+<div class="device-area">
+    <div class="device-wrap">
+        <div class="device-frame iphone" id="deviceFrame">
+            <div class="dynamic-island"></div>
+            <div class="status-bar">
+                <span>9:41</span>
+                <span class="icons">
+                    <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="4" width="3" height="8" rx="0.5" fill="currentColor"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="0.5" fill="currentColor"/><rect x="9" y="1" width="3" height="11" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 3.6C9.8 3.6 11.4 4.3 12.6 5.5L14.1 4C12.5 2.4 10.4 1.4 8 1.4C5.6 1.4 3.5 2.4 1.9 4L3.4 5.5C4.6 4.3 6.2 3.6 8 3.6Z" fill="currentColor"/><path d="M8 6.8C9.1 6.8 10 7.2 10.8 7.8L12.2 6.3C11 5.3 9.6 4.6 8 4.6C6.4 4.6 5 5.3 3.8 6.3L5.2 7.8C6 7.2 6.9 6.8 8 6.8Z" fill="currentColor"/><circle cx="8" cy="10.5" r="1.5" fill="currentColor"/></svg>
+                    <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="21" height="10" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="2.5" width="18" height="7" rx="1" fill="currentColor"/><rect x="22" y="4" width="2" height="4" rx="0.5" fill="currentColor"/></svg>
+                </span>
+            </div>
+            <div class="screen-content" id="screenContent">
+                <!-- dynamically rendered -->
+            </div>
+            <div class="home-indicator"></div>
+        </div>
+        <div class="device-label" id="deviceLabel">iPhone 15 Pro &mdash; 393 &times; 852</div>
+    </div>
+</div>
+
+<script>
+const LOGO_B64 = "data:image/png;base64,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";
+
+const MODES = [
+    { key:'faultFinder', name:'Fault Finder', icon:'\u26A1', desc:'Get it fixed', color:'--mode-fault-finder', bg:'--mode-fault-12',
+      fullDesc:'Diagnose electrical faults, trace circuits, and identify issues with AI-assisted troubleshooting.',
+      iconSvg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M11 21h-1l1-7H7.5c-.88 0-.33-.75-.31-.78C8.48 10.94 10.42 7.54 13.01 3h1l-1 7h3.51c.4 0 .62.19.4.66C12.97 17.55 11 21 11 21z"/></svg>' },
+    { key:'learn', name:'Learn', icon:'\uD83D\uDCD6', desc:'Show me how', color:'--mode-learn', bg:'--mode-learn-12',
+      fullDesc:'Study electrical theory, code compliance, and best practices with interactive AI tutoring.',
+      iconSvg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>' },
+    { key:'research', name:'Research', icon:'\uD83D\uDD0D', desc:'Look it up', color:'--mode-research', bg:'--mode-research-12',
+      fullDesc:'Research products, specifications, regulations, and technical documentation.',
+      iconSvg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>' }
+];
+
+const MOCK = {
+    conversations: [
+        {
+            id:'c1', title:'RCD keeps tripping', mode:0, date:'14 Mar 2026', count:4,
+            messages: [
+                { role:'user', blocks:[{type:'text',content:'The RCD on my switchboard keeps tripping every time I turn on the kitchen lights. It\u2019s a Clipsal 4RC440/30 on a domestic board. What should I check?'}], time:'2:14 PM' },
+                { role:'assistant', mode:0, blocks:[
+                    {type:'text', content:'An RCD tripping when a specific circuit is loaded usually indicates an earth leakage fault on that circuit. Since it only trips with the kitchen lights, the fault is likely isolated to the lighting sub-circuit. Here is a systematic approach to diagnose it.'},
+                    {type:'stepList', title:'RCD Trip Diagnosis Procedure', steps:[
+                        'Isolate the kitchen lighting circuit at the switchboard by switching off its MCB.',
+                        'Reset the RCD. If it holds, the fault is confirmed on that circuit.',
+                        'Disconnect all luminaires on the kitchen circuit at their terminal blocks.',
+                        'Perform an insulation resistance test (IR test) between active-earth and neutral-earth on the circuit cabling. You need a minimum of 1 M\u03A9 at 500V DC per AS/NZS 3017.',
+                        'If cabling passes, reconnect luminaires one at a time, testing the RCD after each reconnection.',
+                        'The luminaire that causes the trip is your fault source \u2014 check its wiring, terminations, and the fitting for moisture ingress.',
+                        'Once the faulty fitting is identified, inspect for damaged insulation, pinched cables, or water in the junction box.',
+                        'Repair or replace the faulty fitting and re-test the full circuit IR before restoring supply.'
+                    ]},
+                    {type:'warning', content:'Always isolate and lock out the circuit before performing insulation resistance testing. IR testers apply 500V DC which is lethal. Confirm zero volts with a proving unit before touching any conductors.'},
+                    {type:'partsList', title:'Common Replacement Parts', items:[
+                        {name:'Clipsal 4RC440/30 RCD', spec:'4-pole 40A 30mA Type A', qty:1},
+                        {name:'LED Downlight', spec:'IC-4 rated, IP44, AS/NZS 60598.2.2', qty:1},
+                        {name:'Terminal Connector', spec:'3-pole lever connector 32A rated', qty:6},
+                        {name:'TPS Cable', spec:'2.5mm\u00B2 Twin & Earth 450/750V', qty:10}
+                    ]},
+                    {type:'regulation', code:'AS/NZS 3000:2018', clause:'Clause 2.6.3.2', summary:'All final sub-circuits in domestic installations require 30mA RCD protection. The RCD must be tested at installation and at regular intervals using the built-in test button.'}
+                ], time:'2:14 PM' },
+                { role:'user', blocks:[{type:'text',content:'I did the IR test and got 0.3 M\u03A9 between active and earth on the circuit. That\u2019s a fail right?'}], time:'2:18 PM' },
+                { role:'assistant', mode:0, blocks:[
+                    {type:'text', content:'Correct \u2014 0.3 M\u03A9 is well below the minimum 1 M\u03A9 required by AS/NZS 3017 Table 8.1 for a 230V circuit. This confirms an insulation breakdown between active and earth somewhere on the circuit.'},
+                    {type:'stepList', title:'Narrowing Down the Fault', steps:[
+                        'Disconnect the circuit at every junction point, splitting it into individual cable runs.',
+                        'IR test each cable run individually between active-earth and neutral-earth.',
+                        'The run that reads below 1 M\u03A9 contains the damaged section.',
+                        'Inspect that cable run for staple damage, rodent activity, or moisture ingress at penetrations.',
+                        'Replace the damaged cable section and re-test the full circuit.'
+                    ]},
+                    {type:'warning', content:'Do not energise a circuit with insulation resistance below 1 M\u03A9. This presents a shock risk and will continue to trip the RCD. The fault must be rectified before restoring supply.'}
+                ], time:'2:19 PM' }
+            ]
+        },
+        {
+            id:'c2', title:'Cable sizing for power circuits', mode:1, date:'13 Mar 2026', count:4,
+            messages: [
+                { role:'user', blocks:[{type:'text',content:'Can you explain how to size cables for a standard domestic power circuit? I\u2019m studying for my capstone and want to understand the process properly.'}], time:'10:30 AM' },
+                { role:'assistant', mode:1, blocks:[
+                    {type:'heading', content:'Cable Sizing for Domestic Power Circuits', level:1},
+                    {type:'text', content:'Cable sizing involves matching the conductor cross-sectional area to the expected load current while accounting for installation conditions that reduce the cable\u2019s current-carrying capacity. The process defined in AS/NZS 3008.1 follows three main steps: determine the design current, apply derating factors, then verify voltage drop.'},
+                    {type:'heading', content:'Step 1 \u2014 Design Current', level:2},
+                    {type:'text', content:'For a standard domestic GPO circuit protected by a 20A MCB, the design current is the MCB rating: 20A. The cable must be rated to carry at least this current continuously under the installed conditions.'},
+                    {type:'heading', content:'Step 2 \u2014 Derating Factors', level:2},
+                    {type:'text', content:'The base current rating from AS/NZS 3008.1 Table 3 assumes a single circuit at 40\u00B0C ambient in free air. Real installations require derating for grouping, ambient temperature, thermal insulation contact, and installation method.'},
+                    {type:'code', language:'text', content:'Cable Sizing Reference \u2014 AS/NZS 3008.1 Table 3 (Enclosed in Conduit/Trunking)\n\nConductor     | 2-core flat | 2C+E flat | Circular\n1.0 mm\u00B2       |    12A      |    12A    |   11A\n1.5 mm\u00B2       |    15A      |    15A    |   14A\n2.5 mm\u00B2       |    20A      |    20A    |   18A\n4.0 mm\u00B2       |    27A      |    25A    |   24A\n6.0 mm\u00B2       |    34A      |    32A    |   31A\n10.0 mm\u00B2      |    46A      |    43A    |   42A'},
+                    {type:'callout', style:'tip', content:'For a 20A GPO circuit run in TPS through ceiling insulation, use 2.5mm\u00B2 as the starting point. If the cable passes through insulation for more than 200mm, apply a derating factor of 0.5 (Table 25 of AS/NZS 3008.1), which means the effective rating drops to 10A \u2014 below the 20A MCB. In that case, upsize to 4.0mm\u00B2.'},
+                    {type:'table', headers:['Cable Size','Base Rating (Enclosed)','Derated (Insulation)','Typical Use'], rows:[
+                        ['1.0 mm\u00B2','12A','6A','Lighting circuits (10A MCB)'],
+                        ['1.5 mm\u00B2','15A','7.5A','Lighting circuits (16A MCB)'],
+                        ['2.5 mm\u00B2','20A','10A','Standard GPO circuits (20A MCB)'],
+                        ['4.0 mm\u00B2','27A','13.5A','High-load GPO or cooktop circuits'],
+                        ['6.0 mm\u00B2','34A','17A','Ovens, hot water, large A/C'],
+                        ['10.0 mm\u00B2','46A','23A','Sub-mains, EV chargers']
+                    ]}
+                ], time:'10:31 AM' },
+                { role:'user', blocks:[{type:'text',content:'What about voltage drop? How do I check that?'}], time:'10:35 AM' },
+                { role:'assistant', mode:1, blocks:[
+                    {type:'heading', content:'Voltage Drop Verification', level:2},
+                    {type:'text', content:'AS/NZS 3000:2018 Clause 3.6.2 limits the total voltage drop from the point of supply to the furthest point of utilisation to 5% of the nominal voltage. For a 230V supply, that is a maximum of 11.5V total. This includes the drop in the consumer mains and the sub-circuit.'},
+                    {type:'code', language:'text', content:'Voltage Drop Formula:\n\nVd = (I \u00D7 L \u00D7 Vc) / 1000\n\nWhere:\n  Vd = Voltage drop (volts)\n  I  = Design current (amps)\n  L  = Route length of cable (metres, one way)\n  Vc = Voltage drop per amp per metre (mV/A/m)\n       from AS/NZS 3008.1 Table 40\n\nExample: 20A circuit, 25m run, 2.5mm\u00B2 TPS\n  Vc for 2.5mm\u00B2 = 18.1 mV/A/m\n  Vd = (20 \u00D7 25 \u00D7 18.1) / 1000 = 9.05V\n  9.05V / 230V = 3.9% \u2014 PASS (under 5%)'},
+                    {type:'callout', style:'important', content:'Always calculate voltage drop for long cable runs, especially in large houses or sheds. If the voltage drop exceeds 5%, either increase the cable size or reduce the circuit length by relocating the switchboard or adding a sub-board closer to the load.'}
+                ], time:'10:36 AM' }
+            ]
+        },
+        {
+            id:'c3', title:'EV charger installation requirements', mode:2, date:'12 Mar 2026', count:4,
+            messages: [
+                { role:'user', blocks:[{type:'text',content:'What are the requirements for installing a Level 2 EV charger in a residential property in Australia? I need to know the regulatory requirements and what specs to look at.'}], time:'4:00 PM' },
+                { role:'assistant', mode:2, blocks:[
+                    {type:'heading', content:'Residential EV Charger Installation \u2014 Australia', level:1},
+                    {type:'text', content:'Level 2 EV chargers operate on single-phase or three-phase supply at 240V/415V AC and require a dedicated circuit from the switchboard. Installation must comply with AS/NZS 3000:2018 (Wiring Rules), AS/NZS 3001 for transportable structures if applicable, and any state-specific regulations. The charger itself must comply with AS/NZS 61851 (EV conductive charging systems).'},
+                    {type:'regulation', code:'AS/NZS 3000:2018', clause:'Clause 4.14', summary:'Section 4.14 covers EV charging installations specifically, including requirements for dedicated circuits, RCD protection, cable sizing, and installation of Mode 2 and Mode 3 charging equipment.'},
+                    {type:'link', content:'AS/NZS 61851.1:2014 \u2014 Electric vehicle conductive charging system: General requirements', url:'https://www.standards.org.au/standards-catalogue/sa-snz/electrotechnology/el-055/as-slash-nzs--61851-dot-1-colon-2014'},
+                    {type:'table', headers:['Specification','Single-Phase','Three-Phase'], rows:[
+                        ['Supply Voltage','230V AC','415V AC'],
+                        ['Typical Current','32A','32A per phase'],
+                        ['Power Output','7.4 kW','22 kW'],
+                        ['Minimum Cable Size','6.0 mm\u00B2 TPS','6.0 mm\u00B2 4-core+E'],
+                        ['MCB Rating','40A Type C','40A 3-pole Type C'],
+                        ['RCD Requirement','30mA Type A or Type B','30mA Type B (recommended)'],
+                        ['Dedicated Circuit','Required','Required'],
+                        ['Metering','Optional sub-meter','Recommended sub-meter']
+                    ]}
+                ], time:'4:01 PM' },
+                { role:'user', blocks:[{type:'text',content:'Does the customer need a switchboard upgrade? Their board is already pretty full and they have a 63A main switch.'}], time:'4:05 PM' },
+                { role:'assistant', mode:2, blocks:[
+                    {type:'text', content:'A 63A single-phase main switch limits the total available capacity. A 7.4 kW charger draws 32A continuously, which is over 50% of the main switch rating. You need to perform a maximum demand calculation per AS/NZS 3000:2018 Appendix C to determine if the existing supply can support the additional load.'},
+                    {type:'stepList', title:'Maximum Demand Assessment', steps:[
+                        'List all existing fixed loads: hot water, oven, cooktop, air conditioning, pool equipment.',
+                        'Apply diversity factors from AS/NZS 3000 Appendix C Table C1 to calculate the after-diversity maximum demand (ADMD).',
+                        'Add the EV charger load (32A for single-phase Level 2) with no diversity \u2014 it is a continuous load.',
+                        'Compare the total ADMD against the 63A main switch and service fuse rating.',
+                        'If total exceeds 63A, options include: upgrading the main switch and service fuse, installing a load management device, or selecting a lower-rated charger (e.g., 15A / 3.6 kW).'
+                    ]},
+                    {type:'regulation', code:'AS/NZS 3000:2018', clause:'Clause 3.5.1', summary:'Before adding any significant load to an existing installation, a maximum demand assessment must verify the supply capacity is sufficient. This applies to EV chargers, solar inverters, and other large fixed appliances.'},
+                    {type:'callout', style:'info', content:'Many distributors offer a streamlined process for supply upgrades from 63A to 80A or 100A. Contact the local DNSP (e.g., Ausgrid, Endeavour, Essential Energy in NSW) before quoting the job \u2014 the supply upgrade timeline can affect the project schedule.'}
+                ], time:'4:06 PM' }
+            ]
+        }
+    ]
+};
+
+let currentDevice = 'iphone';
+let currentComponent = 'full-chat';
+let currentMode = 0;
+let isDark = false;
+let sidebarOpen = false;
+let modeCardDismissed = false;
+
+function getColor(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+function setDevice(type) {
+    currentDevice = type;
+    const frame = document.getElementById('deviceFrame');
+    frame.className = 'device-frame ' + type;
+    const labels = { iphone:'iPhone 15 Pro \u2014 393 \u00D7 852', ipad:'iPad Pro 11" \u2014 834 \u00D7 1194 (scaled 60%)', watch:'Apple Watch \u2014 198 \u00D7 242' };
+    document.getElementById('deviceLabel').innerHTML = labels[type] || '';
+    render();
+}
+
+function setComponent(comp) {
+    currentComponent = comp;
+    sidebarOpen = comp === 'sidebar';
+    render();
+}
+
+function toggleTheme() {
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeBtn').innerHTML = isDark ? '&#9788; Light' : '&#9790; Dark';
+    document.getElementById('themeBtn').classList.toggle('active', isDark);
+    render();
+}
+
+function selectMode(idx) {
+    currentMode = idx;
+    modeCardDismissed = false;
+    render();
+}
+
+function dismissCard() {
+    modeCardDismissed = true;
+    render();
+}
+
+function toggleSidebar(open) {
+    sidebarOpen = open;
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (overlay) overlay.classList.toggle('visible', open);
+}
+
+function toggleSendBtn() {
+    const inp = document.getElementById('msgInput');
+    const btn = document.getElementById('sendBtnEl');
+    if (inp && btn) btn.classList.toggle('visible', inp.value.trim().length > 0);
+}
+
+// Renderers
+function htmlModeCard(modeIdx) {
+    const m = MODES[modeIdx];
+    const c = getColor(m.color);
+    return `<div class="mode-card${modeCardDismissed?' hidden':''}" id="modeCard" onclick="dismissCard()">
+        <div class="mode-card-icon" style="background:${c}">${m.iconSvg}</div>
+        <div class="mode-card-text">
+            <div class="mode-card-title" style="color:${c}">${m.name}</div>
+            <div class="mode-card-body">${m.fullDesc}</div>
+        </div>
+        <button class="mode-card-close" onclick="dismissCard()">&times;</button>
+    </div>`;
+}
+
+function htmlModeSelector(activeIdx) {
+    return `<div class="mode-selector-row">${MODES.map((m,i) => {
+        const c = getColor(m.color);
+        const bg = getColor(m.bg);
+        const active = i === activeIdx;
+        return `<button class="mode-pill${active?' active':''}" onclick="selectMode(${i})"
+            style="${active?'--active-color:'+c+';--active-bg:'+bg+';':''}">
+            <div class="pill-top"><span class="pill-icon">${m.icon}</span><span class="pill-label">${m.name}</span></div>
+            <span class="pill-desc">${m.desc}</span>
+        </button>`;
+    }).join('')}</div>`;
+}
+
+function htmlInputBar() {
+    return `<div class="input-area">
+        ${htmlModeSelector(currentMode)}
+        <div class="input-row">
+            <button class="add-btn">+</button>
+            <div class="text-input-wrap">
+                <input class="text-input" type="text" placeholder="Ask TradeGuru" id="msgInput" oninput="toggleSendBtn(); dismissCard()" onfocus="dismissCard()">
+            </div>
+            <button class="send-btn" id="sendBtnEl">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="var(--trade-green)"><circle cx="14" cy="14" r="14"/><path d="M14 7l-1 0 0 6-6 0 0 2 6 0 0 6 2 0 0-6 6 0 0-2-6 0 0-6z" fill="var(--trade-bg)" transform="rotate(45 14 14)"/></svg>
+            </button>
+        </div>
+    </div>`;
+}
+
+function htmlNavBar() {
+    return `<div class="nav-bar">
+        <button class="nav-icon-btn" onclick="toggleSidebar(true)">
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="19" y2="1"/><line x1="1" y1="7" x2="19" y2="7"/><line x1="1" y1="13" x2="19" y2="13"/></svg>
+        </button>
+        <button class="nav-icon-btn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+    </div>`;
+}
+
+function htmlSidebar() {
+    return `<div class="sidebar-overlay${sidebarOpen?' visible':''}">
+        <div class="sidebar-dim" onclick="toggleSidebar(false)"></div>
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <span class="sidebar-title">Conversations</span>
+                <button class="sidebar-close" onclick="toggleSidebar(false)">&times;</button>
+            </div>
+            <div class="sidebar-list">
+                ${MOCK.conversations.map(c => {
+                    const m = MODES[c.mode];
+                    const mc = getColor(m.color);
+                    return `<button class="sidebar-row" onclick="toggleSidebar(false)">
+                        <span class="sidebar-row-icon" style="color:${mc}">${m.icon}</span>
+                        <div>
+                            <div class="sidebar-row-title">${c.title}</div>
+                            <div class="sidebar-row-meta">${c.date}</div>
+                            <div class="sidebar-row-meta">${c.count} messages</div>
+                        </div>
+                    </button>`;
+                }).join('')}
+            </div>
+            <div class="sidebar-footer">
+                <button class="sidebar-new-btn" onclick="toggleSidebar(false)">New Conversation</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function htmlBlock(block) {
+    switch(block.type) {
+        case 'text':
+            return `<div class="block-text">${esc(block.content)}</div>`;
+        case 'heading':
+            const hl = block.level || 2;
+            return `<div class="block-heading h${hl}">${esc(block.content)}</div>`;
+        case 'stepList':
+            return `<div class="block-step-list">
+                ${block.title?`<div class="step-title">${esc(block.title)}</div>`:''}
+                ${(block.steps||[]).map((s,i) => `<div class="step-item">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-text">${esc(s)}</div>
+                </div>`).join('')}
+            </div>`;
+        case 'warning':
+            const isDanger = (block.content||'').toLowerCase().includes('danger');
+            return `<div class="block-warning">
+                <span class="warning-icon">\u26A0\uFE0F</span>
+                <div class="warning-body">
+                    <div class="warning-title">${isDanger?'Danger':'Warning'}</div>
+                    <div class="warning-text">${esc(block.content)}</div>
+                </div>
+            </div>`;
+        case 'code':
+            return `<div class="block-code">${block.language?`<span class="code-lang">${esc(block.language)}</span>`:''}${esc(block.content)}</div>`;
+        case 'partsList':
+            return `<div class="block-parts">
+                <div class="parts-header"><span>Item</span><span>Spec</span><span>Qty</span></div>
+                ${(block.items||[]).map(p => `<div class="parts-row"><span>${esc(p.name)}</span><span>${esc(p.spec)}</span><span>${p.qty}</span></div>`).join('')}
+            </div>`;
+        case 'regulation':
+            return `<div class="block-regulation">
+                <div class="reg-code">${esc(block.code||'')}</div>
+                <div class="reg-clause">${esc(block.clause||'')}</div>
+                <div class="reg-summary">${esc(block.summary||'')}</div>
+            </div>`;
+        case 'table':
+            return `<div class="block-table"><table class="table-inner">
+                ${block.headers?`<tr>${block.headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`:''}
+                ${(block.rows||[]).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}
+            </table></div>`;
+        case 'callout':
+            const st = block.style || 'info';
+            const icons = {tip:'\uD83D\uDCA1',info:'\u2139\uFE0F',important:'\u2757'};
+            return `<div class="block-callout callout-border-${st}">
+                <span class="callout-icon callout-icon-${st}">${icons[st]||icons.info}</span>
+                <div class="callout-text">${esc(block.content)}</div>
+            </div>`;
+        case 'diagramRef':
+        case 'diagram_ref':
+            return `<div style="padding:12px; background:var(--trade-surface); border-radius:12px; font-style:italic; color:var(--trade-text-secondary)">\uD83D\uDCD0 Diagram: ${esc(block.content || block.title || 'Diagram reference')}</div>`;
+        case 'toolCall':
+        case 'tool_call':
+            return `<div style="padding:12px; background:var(--trade-surface); border-radius:12px; font-style:italic; color:var(--trade-text-secondary)">\u2699\uFE0F Tool: ${esc(block.content || block.title || 'Processing...')}</div>`;
+        case 'link':
+            return `<div style="padding:8px 0"><a href="${block.url || '#'}" style="color:var(--mode-learn); text-decoration:underline; font-size:14px">${esc(block.content || block.title || block.url || 'Link')}</a></div>`;
+        default:
+            return `<div class="block-text" style="font-style:italic;color:var(--trade-text-secondary)">${esc(block.type)}: ${esc(block.content||'')}</div>`;
+    }
+}
+
+function htmlMessage(msg) {
+    if (msg.role === 'user') {
+        const txt = msg.blocks.map(b=>b.content||'').join('\n');
+        return `<div class="msg-row user">
+            <div class="msg-bubble-user">${esc(txt)}</div>
+            <div class="msg-meta"><span class="msg-meta-time">${msg.time}</span></div>
+        </div>`;
+    } else {
+        const m = MODES[msg.mode || 0];
+        const mc = getColor(m.color);
+        return `<div class="msg-row assistant">
+            <div class="msg-bubble-assistant">${msg.blocks.map(htmlBlock).join('')}</div>
+            <div class="msg-meta">
+                <span class="msg-meta-icon" style="color:${mc}">${m.icon}</span>
+                <span class="msg-meta-time">${msg.time}</span>
+            </div>
+        </div>`;
+    }
+}
+
+function esc(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function renderFullChat() {
+    const conv = MOCK.conversations[0];
+    return `${htmlNavBar()}
+        ${htmlModeCard(currentMode)}
+        <div class="chat-content">
+            <div class="messages-list">
+                ${conv.messages.map(htmlMessage).join('')}
+            </div>
+        </div>
+        ${htmlInputBar()}
+        ${htmlSidebar()}`;
+}
+
+function renderIsolated(html) {
+    return `${htmlNavBar()}<div class="isolated-component"><div style="width:100%">${html}</div></div>`;
+}
+
+function render() {
+    const sc = document.getElementById('screenContent');
+    const isWatch = currentDevice === 'watch';
+
+    switch(currentComponent) {
+        case 'full-chat':
+            sc.innerHTML = renderFullChat();
+            break;
+        case 'msg-user':
+            sc.innerHTML = renderIsolated(htmlMessage(MOCK.conversations[0].messages[0]));
+            break;
+        case 'msg-assistant':
+            sc.innerHTML = renderIsolated(htmlMessage(MOCK.conversations[0].messages[1]));
+            break;
+        case 'block-text':
+            sc.innerHTML = renderIsolated(htmlBlock({type:'text',content:'An RCD tripping when a specific circuit is loaded usually indicates an earth leakage fault on that circuit. Since it only trips with the kitchen lights, the fault is likely isolated to the lighting sub-circuit. Here is a systematic approach to diagnose it.'}));
+            break;
+        case 'block-step-list':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[0].messages[1].blocks[1]));
+            break;
+        case 'block-warning':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[0].messages[1].blocks[2]));
+            break;
+        case 'block-code':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[1].messages[1].blocks[6]));
+            break;
+        case 'block-parts':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[0].messages[1].blocks[3]));
+            break;
+        case 'block-regulation':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[0].messages[1].blocks[4]));
+            break;
+        case 'block-table':
+            sc.innerHTML = renderIsolated(htmlBlock(MOCK.conversations[1].messages[1].blocks[8]));
+            break;
+        case 'block-callout':
+            sc.innerHTML = renderIsolated(
+                htmlBlock({type:'callout',style:'tip',content:'For a 20A GPO circuit run in TPS through ceiling insulation, use 2.5mm\u00B2 as the starting point. If the cable passes through insulation for more than 200mm, apply a derating factor of 0.5.'}) +
+                '<div style="height:12px"></div>' +
+                htmlBlock({type:'callout',style:'info',content:'Many distributors offer a streamlined process for supply upgrades from 63A to 80A or 100A. Contact the local DNSP before quoting the job.'}) +
+                '<div style="height:12px"></div>' +
+                htmlBlock({type:'callout',style:'important',content:'Always calculate voltage drop for long cable runs, especially in large houses or sheds. If the voltage drop exceeds 5%, either increase the cable size or reduce the circuit length.'})
+            );
+            break;
+        case 'sidebar':
+            sidebarOpen = true;
+            sc.innerHTML = `${htmlNavBar()}<div class="empty-state"><img class="watermark-logo" src="${LOGO_B64}" alt=""></div>${isWatch?'':htmlInputBar()}${htmlSidebar()}`;
+            break;
+        case 'mode-selector':
+            sc.innerHTML = renderIsolated(`<div style="padding:0 12px">${htmlModeSelector(currentMode)}</div>`);
+            break;
+        case 'chat-input':
+            sc.innerHTML = `${htmlNavBar()}<div style="flex:1"></div>${htmlInputBar()}`;
+            break;
+        default:
+            sc.innerHTML = renderFullChat();
+    }
+}
+
+// Init
+render();
+
+// =========================================================================
+// WORKBENCH TOOLS (not part of TradeGuru — dev workspace only)
+// =========================================================================
+
+// --- Drawing Canvas ---
+const drawCanvas = document.createElement('canvas');
+drawCanvas.className = 'draw-canvas';
+drawCanvas.width = window.innerWidth;
+drawCanvas.height = window.innerHeight;
+document.body.appendChild(drawCanvas);
+const drawCtx = drawCanvas.getContext('2d');
+let penActive = false;
+let isDrawing = false;
+let penColor = '#e94560';
+let penSize = 3;
+let eraserMode = false;
+
+window.addEventListener('resize', () => {
+    const imgData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+    drawCanvas.width = window.innerWidth;
+    drawCanvas.height = window.innerHeight;
+    drawCtx.putImageData(imgData, 0, 0);
+});
+
+drawCanvas.addEventListener('mousedown', (e) => {
+    if (!penActive) return;
+    isDrawing = true;
+    drawCtx.beginPath();
+    drawCtx.moveTo(e.clientX, e.clientY);
+});
+drawCanvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
+    if (eraserMode) {
+        drawCtx.globalCompositeOperation = 'destination-out';
+        drawCtx.lineWidth = penSize * 6;
+    } else {
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.lineWidth = penSize;
+    }
+    drawCtx.strokeStyle = penColor;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+    drawCtx.lineTo(e.clientX, e.clientY);
+    drawCtx.stroke();
+});
+drawCanvas.addEventListener('mouseup', () => { isDrawing = false; });
+drawCanvas.addEventListener('mouseleave', () => { isDrawing = false; });
+
+function togglePen() {
+    penActive = !penActive;
+    eraserMode = false;
+    drawCanvas.classList.toggle('active', penActive);
+    drawCanvas.classList.remove('eraser-mode');
+    document.getElementById('penBtn').classList.toggle('active', penActive);
+    document.querySelector('.pen-toolbar').classList.toggle('visible', penActive);
+}
+
+function toggleEraser() {
+    eraserMode = !eraserMode;
+    drawCanvas.classList.toggle('eraser-mode', eraserMode);
+    document.getElementById('eraserBtn').classList.toggle('active', eraserMode);
+}
+
+function clearDrawing() {
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+}
+
+function setPenColor(color, btn) {
+    penColor = color;
+    eraserMode = false;
+    drawCanvas.classList.remove('eraser-mode');
+    document.querySelectorAll('.pen-toolbar .color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function setPenSize(size, btn) {
+    penSize = size;
+    document.querySelectorAll('.pen-toolbar .size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+// --- Notes Panel ---
+let notes = JSON.parse(localStorage.getItem('tg_workbench_notes') || '[]');
+let notesVisible = false;
+
+function toggleNotes() {
+    notesVisible = !notesVisible;
+    document.getElementById('notesPanel').classList.toggle('visible', notesVisible);
+    document.getElementById('notesBtn').classList.toggle('active', notesVisible);
+    renderNotes();
+}
+
+function renderNotes() {
+    const list = document.getElementById('notesList');
+    if (!list) return;
+    list.innerHTML = notes.map((n, i) =>
+        `<div class="note-item">
+            <button class="note-delete" onclick="deleteNote(${i})">×</button>
+            ${n.text}
+            <div class="note-time">${n.time}</div>
+        </div>`
+    ).join('') || '<div style="color:#666;padding:20px;text-align:center">No notes yet</div>';
+}
+
+function addNote() {
+    const input = document.getElementById('noteInput');
+    if (!input.value.trim()) return;
+    notes.unshift({ text: input.value.trim(), time: new Date().toLocaleString() });
+    localStorage.setItem('tg_workbench_notes', JSON.stringify(notes));
+    input.value = '';
+    renderNotes();
+}
+
+function deleteNote(i) {
+    notes.splice(i, 1);
+    localStorage.setItem('tg_workbench_notes', JSON.stringify(notes));
+    renderNotes();
+}
+
+document.getElementById('noteInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addNote();
+});
+</script>
+
+<!-- Workbench: Pen Toolbar (floating, bottom center) -->
+<div class="pen-toolbar" id="penToolbar">
+    <span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.5px">Pen</span>
+    <button class="color-btn active" style="background:#e94560" onclick="setPenColor('#e94560',this)"></button>
+    <button class="color-btn" style="background:#3b82f6" onclick="setPenColor('#3b82f6',this)"></button>
+    <button class="color-btn" style="background:#20AB6E" onclick="setPenColor('#20AB6E',this)"></button>
+    <button class="color-btn" style="background:#FBBF24" onclick="setPenColor('#FBBF24',this)"></button>
+    <button class="color-btn" style="background:#fff" onclick="setPenColor('#ffffff',this)"></button>
+    <div class="sep"></div>
+    <button class="size-btn" onclick="setPenSize(2,this)">S</button>
+    <button class="size-btn active" onclick="setPenSize(3,this)">M</button>
+    <button class="size-btn" onclick="setPenSize(6,this)">L</button>
+    <div class="sep"></div>
+    <button class="tool-btn" id="eraserBtn" onclick="toggleEraser()">Eraser</button>
+    <button class="tool-btn" onclick="clearDrawing()">Clear</button>
+</div>
+
+<!-- Workbench: Notes Panel (right sidebar) -->
+<div class="notes-panel" id="notesPanel">
+    <div class="notes-panel-header">
+        <span>Design Notes</span>
+        <button onclick="toggleNotes()">×</button>
+    </div>
+    <div class="notes-list" id="notesList"></div>
+    <div class="notes-input-row">
+        <input id="noteInput" type="text" placeholder="Add a note..." />
+        <button onclick="addNote()">Add</button>
+    </div>
+</div>
+
+</body>
+</html>

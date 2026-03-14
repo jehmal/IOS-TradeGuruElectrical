@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""TradeGuru CLI Toolkit — project scaffolding, Swift builds, and image generation.
+
+Usage:
+    tradeguru <command> [options]
+
+Project Commands:
+    create-app          Create a new app project scaffold
+    swift-build         Build the Swift project
+    swift-install       Add Swift package dependencies
+    swift-add-target    Add a new Xcode target
+
+Image Commands:
+    list-assets         List existing image assets
+    confirm-images      Review and approve image generation proposals
+    generate-asset      Generate a custom image asset
+    generate-image      Generate a general image
+    generate-icon       Generate and save an app icon
+    generate-screenshot Generate an App Store screenshot mockup
+    wait-result         Check/retrieve a background generation result
+"""
+
+import argparse
+import json
+import os
+import sys
+
+# Ensure the tools directory is on the path
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, TOOLS_DIR)
+
+
+def cmd_create_app(args):
+    from project_tools import create_app
+    create_app(name=args.name, framework=args.framework, path=args.path)
+
+
+def cmd_swift_build(args):
+    from project_tools import swift_build
+    swift_build(app_path=args.app_path)
+
+
+def cmd_swift_install(args):
+    from project_tools import swift_install
+    try:
+        packages = json.loads(args.packages)
+    except json.JSONDecodeError as e:
+        print(f"\033[31m✗\033[0m Invalid JSON for --packages: {e}", file=sys.stderr)
+        print('  Expected format: [{"url":"https://...git","version":"1.0.0","products":["Name"]}]', file=sys.stderr)
+        sys.exit(1)
+    if isinstance(packages, dict):
+        packages = [packages]
+    swift_install(packages=packages, path=args.app_path)
+
+
+def cmd_swift_add_target(args):
+    from project_tools import swift_add_target
+    swift_add_target(name=args.name, target_type=args.type, path=args.app_path)
+
+
+def cmd_list_assets(args):
+    from image_tools import list_existing_image_assets
+    list_existing_image_assets(app_path=args.app_path)
+
+
+def cmd_confirm_images(args):
+    from image_tools import confirm_image_generation
+    confirm_image_generation(assets_json=args.assets)
+
+
+def cmd_generate_asset(args):
+    from image_tools import generate_image_asset
+    generate_image_asset(
+        prompt=args.prompt,
+        asset_name=args.asset_name,
+        size=args.size,
+        background=args.background,
+        input_images=args.input_images,
+        run_in_background=args.background_job,
+    )
+
+
+def cmd_generate_image(args):
+    from image_tools import generate_image
+    generate_image(
+        prompt=args.prompt,
+        size=args.size,
+        background=args.background,
+        img_type=args.type,
+        run_in_background=args.background_job,
+    )
+
+
+def cmd_generate_icon(args):
+    from image_tools import generate_icon
+    generate_icon(
+        prompt=args.prompt,
+        app_path=args.app_path,
+        icon_type=args.icon_type,
+        run_in_background=args.background_job,
+    )
+
+
+def cmd_generate_screenshot(args):
+    from image_tools import generate_screenshot
+    generate_screenshot(
+        prompt=args.prompt,
+        app_path=args.app_path,
+        device=args.device,
+        run_in_background=args.background_job,
+    )
+
+
+def cmd_wait_result(args):
+    from image_tools import wait_image_result
+    wait_image_result(job_id=args.generation_id)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="tradeguru",
+        description="TradeGuru CLI Toolkit — project scaffolding, Swift builds, and image generation.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    sub = parser.add_subparsers(dest="command", help="Available commands")
+
+    # --- create-app ---
+    p = sub.add_parser("create-app", help="Create a new app project scaffold")
+    p.add_argument("--name", required=True, help="App name (e.g. 'TradeGuru')")
+    p.add_argument("--framework", required=True, choices=["swift", "react-native", "web", "kotlin"])
+    p.add_argument("--path", required=True, help="Folder name (lowercase, e.g. 'ios')")
+    p.set_defaults(func=cmd_create_app)
+
+    # --- swift-build ---
+    p = sub.add_parser("swift-build", help="Build the Swift project")
+    p.add_argument("--app-path", default=None, help="Path to Swift app (auto-detected)")
+    p.set_defaults(func=cmd_swift_build)
+
+    # --- swift-install ---
+    p = sub.add_parser("swift-install", help="Add Swift package dependencies")
+    p.add_argument(
+        "--packages", required=True,
+        help='JSON array: [{"url":"...git","version":"1.0.0","products":["Name"]}]',
+    )
+    p.add_argument("--app-path", default=None, help="Path to Swift app")
+    p.set_defaults(func=cmd_swift_install)
+
+    # --- swift-add-target ---
+    p = sub.add_parser("swift-add-target", help="Add a new Xcode target")
+    p.add_argument("--name", required=True, help="Target name (PascalCase)")
+    p.add_argument(
+        "--type", required=True,
+        choices=["widget", "share-extension", "notification-content", "app-intent",
+                 "watch-app", "tv-app", "vision-app", "imessage-app"],
+    )
+    p.add_argument("--app-path", default=None, help="Path to Swift app")
+    p.set_defaults(func=cmd_swift_add_target)
+
+    # --- list-assets ---
+    p = sub.add_parser("list-assets", help="List existing image assets")
+    p.add_argument("--app-path", default=None, help="Path to app (auto-detected)")
+    p.set_defaults(func=cmd_list_assets)
+
+    # --- confirm-images ---
+    p = sub.add_parser("confirm-images", help="Review and approve image generation proposals")
+    p.add_argument(
+        "--assets", required=True,
+        help='JSON array: [{"assetName":"hero","prompt":"A hero banner"}]',
+    )
+    p.set_defaults(func=cmd_confirm_images)
+
+    # --- generate-asset ---
+    p = sub.add_parser("generate-asset", help="Generate a custom image asset")
+    p.add_argument("--prompt", required=True, help="Image description")
+    p.add_argument("--asset-name", required=True, help="Asset name (snake_case, e.g. hero_banner)")
+    p.add_argument("--size", default="1024x1024", choices=["auto", "1024x1024", "1024x1536", "1536x1024", "1024x1792", "1792x1024", "256x256", "512x512"])
+    p.add_argument("--background", default="auto", choices=["transparent", "opaque", "auto"])
+    p.add_argument("--input-images", default=None, help="Comma-separated URLs for edit mode")
+    p.add_argument("--background-job", action="store_true", help="Track as background job")
+    p.set_defaults(func=cmd_generate_asset)
+
+    # --- generate-image ---
+    p = sub.add_parser("generate-image", help="Generate a general image")
+    p.add_argument("--prompt", required=True, help="Image description")
+    p.add_argument("--size", default="1024x1024", choices=["auto", "1024x1024", "1024x1536", "1536x1024", "1024x1792", "1792x1024", "256x256", "512x512"])
+    p.add_argument("--background", default="auto", choices=["transparent", "opaque", "auto"])
+    p.add_argument("--type", default="asset", choices=["icon", "asset"])
+    p.add_argument("--background-job", action="store_true", help="Track as background job")
+    p.set_defaults(func=cmd_generate_image)
+
+    # --- generate-icon ---
+    p = sub.add_parser("generate-icon", help="Generate and save an app icon")
+    p.add_argument("--prompt", required=True, help="Icon design description")
+    p.add_argument("--app-path", required=True, help="App folder (e.g. 'ios')")
+    p.add_argument("--icon-type", default="icon", choices=["icon", "tvos-icon", "visionos-icon", "imessage-icon"])
+    p.add_argument("--background-job", action="store_true", help="Track as background job")
+    p.set_defaults(func=cmd_generate_icon)
+
+    # --- generate-screenshot ---
+    p = sub.add_parser("generate-screenshot", help="Generate App Store screenshot mockup")
+    p.add_argument("--prompt", required=True, help="Screenshot description")
+    p.add_argument("--app-path", required=True, help="App folder (e.g. 'ios')")
+    p.add_argument("--device", default="iphone", choices=["iphone", "ipad"])
+    p.add_argument("--background-job", action="store_true", help="Track as background job")
+    p.set_defaults(func=cmd_generate_screenshot)
+
+    # --- wait-result ---
+    p = sub.add_parser("wait-result", help="Check/retrieve background generation result")
+    p.add_argument("--generation-id", required=True, help="Generation ID from a background generation call")
+    p.set_defaults(func=cmd_wait_result)
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

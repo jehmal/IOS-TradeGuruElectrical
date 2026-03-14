@@ -1,0 +1,5 @@
+The report is saved at [docs/openai-endpoint-factcheck-2.md](/mnt/c/users/jehma/desktop/Tradeguru-swft/docs/openai-endpoint-factcheck-2.md).
+
+Main outcome: the relay should use a mix, with `POST /v1/responses` as the primary internal surface for new chat, vision, structured output, and file-search flows, while keeping dedicated endpoints for files, vector stores, audio, and images. Chat Completions still works and its key shapes remain valid, but OpenAI now recommends Responses for new projects. One important correction versus factcheck #1: `file_search` is now documented on Chat Completions too, although Responses is still the cleaner default and `include: ["file_search_call.results"]` is still the documented way to get raw excerpts.
+
+The report also updates the model picture: `gpt-4o` is still live at `$2.50` input / `$10.00` output per 1M tokens, but newer options now include `gpt-4.1`, GPT-5 family models, `gpt-4o-transcribe`, `gpt-4o-mini-tts`, and `gpt-image-1.5`. I left the TTS voice whitelist as a “refresh from live docs before hardcoding” item rather than freezing the older list again.

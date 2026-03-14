@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "TradeGuruElectrical",
+      "framework": "swift",
+      "path": "ios"
+    }
+  ]
+}
