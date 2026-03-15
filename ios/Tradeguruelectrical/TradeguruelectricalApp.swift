@@ -7,6 +7,11 @@ struct TradeguruelectricalApp: App {
     let container: ModelContainer
 
     init() {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        if let appSupport, !FileManager.default.fileExists(atPath: appSupport.path) {
+            try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        }
+
         do {
             let container = try ModelContainer(for: Conversation.self)
             DataMigrator.migrateIfNeeded(context: container.mainContext)
