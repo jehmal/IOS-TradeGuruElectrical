@@ -223,10 +223,12 @@ enum TradeGuruAPI {
 
     private static func collectErrorBody(_ bytes: URLSession.AsyncBytes) async -> String {
         var collected = ""
-        for await line in bytes.lines {
-            collected += line
-            if collected.count > 500 { break }
-        }
+        do {
+            for try await line in bytes.lines {
+                collected += line
+                if collected.count > 500 { break }
+            }
+        } catch {}
         return collected.isEmpty ? "Unknown error" : collected
     }
 }

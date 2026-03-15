@@ -69,3 +69,30 @@ class ContentBlock {
         self.style = style
     }
 }
+
+extension ContentBlock: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case id, type, content, title, steps, items, language, code, clause, summary, url, rows, headers, level, style
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: (try? c.decode(UUID.self, forKey: .id)) ?? UUID(),
+            type: try c.decode(ContentBlockType.self, forKey: .type),
+            content: try? c.decode(String.self, forKey: .content),
+            title: try? c.decode(String.self, forKey: .title),
+            steps: try? c.decode([String].self, forKey: .steps),
+            items: try? c.decode([PartsItem].self, forKey: .items),
+            language: try? c.decode(String.self, forKey: .language),
+            code: try? c.decode(String.self, forKey: .code),
+            clause: try? c.decode(String.self, forKey: .clause),
+            summary: try? c.decode(String.self, forKey: .summary),
+            url: try? c.decode(String.self, forKey: .url),
+            rows: try? c.decode([[String]].self, forKey: .rows),
+            headers: try? c.decode([String].self, forKey: .headers),
+            level: try? c.decode(Int.self, forKey: .level),
+            style: try? c.decode(String.self, forKey: .style)
+        )
+    }
+}

@@ -16,3 +16,19 @@ class PartsItem {
         self.qty = qty
     }
 }
+
+extension PartsItem: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case id, name, spec, qty
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: (try? c.decode(UUID.self, forKey: .id)) ?? UUID(),
+            name: try c.decode(String.self, forKey: .name),
+            spec: try c.decode(String.self, forKey: .spec),
+            qty: try c.decode(Int.self, forKey: .qty)
+        )
+    }
+}

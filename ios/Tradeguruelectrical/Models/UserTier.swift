@@ -14,7 +14,7 @@ nonisolated enum UserTier: String, Codable {
         }
     }
 
-    var color: Color {
+    @MainActor var color: Color {
         switch self {
         case .free: .tradeTextSecondary
         case .pro: .modeLearn

@@ -31,7 +31,7 @@ nonisolated enum ThinkingMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var color: Color {
+    @MainActor var color: Color {
         switch self {
         case .faultFinder: .modeFaultFinder
         case .learn: .modeLearn
