@@ -13,9 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List available Xcode versions
-        run: ls /Applications/ | grep Xcode
-
       - name: Select latest Xcode
         run: |
           XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
@@ -23,23 +20,36 @@ jobs:
           sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
 
-      - name: List available simulators
-        run: xcrun simctl list devices available | grep iPhone | head -5
-
-      - name: Build iOS Package
+      - name: Build for Simulator
         run: |
           cd ios
           xcodebuild build \
             -scheme Tradeguruelectrical \
             -destination 'generic/platform=iOS Simulator' \
             -sdk iphonesimulator \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tail -50
 
-      - name: Build Result
+      - name: Package .app for Appetize
         if: success()
-        run: echo "BUILD SUCCEEDED"
+        run: |
+          APP_PATH=$(find ios/build -name "*.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
+          if [ -n "$APP_PATH" ]; then
+            cd "$(dirname "$APP_PATH")"
+            zip -r "$GITHUB_WORKSPACE/TradeGuruElectrical.zip" "$(basename "$APP_PATH")"
+            echo "Zipped to TradeGuruElectrical.zip"
+            ls -lh "$GITHUB_WORKSPACE/TradeGuruElectrical.zip"
+          else
+            echo "No .app bundle found"
+            exit 1
+          fi
 
-      - name: Build Failed
-        if: failure()
-        run: echo "BUILD FAILED — check logs above"
+      - name: Upload .app artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TradeGuruElectrical-Simulator
+          path: TradeGuruElectrical.zip
+          retention-days: 30
