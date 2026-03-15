@@ -5,7 +5,7 @@ nonisolated struct SSEEvent {
     let data: String
 }
 
-nonisolated struct StreamDonePayload: Codable {
+nonisolated struct StreamDonePayload: Codable, Sendable {
     let responseId: String
     let usage: TokenUsage?
     let cached: Bool?
@@ -19,7 +19,7 @@ nonisolated struct StreamDonePayload: Codable {
     }
 }
 
-nonisolated struct TokenUsage: Codable {
+nonisolated struct TokenUsage: Codable, Sendable {
     let inputTokens: Int
     let outputTokens: Int
 
@@ -29,13 +29,13 @@ nonisolated struct TokenUsage: Codable {
     }
 }
 
-nonisolated struct StreamErrorPayload: Codable {
+nonisolated struct StreamErrorPayload: Codable, Sendable {
     let code: String
     let message: String
     let partial: Bool?
 }
 
-nonisolated struct StatusPayload: Codable {
+nonisolated struct StatusPayload: Codable, Sendable {
     let stage: String
     let detail: String?
 }
@@ -95,7 +95,7 @@ enum StreamParser {
     }
 }
 
-nonisolated enum StreamResult {
+nonisolated enum StreamResult: @unchecked Sendable {
     case block(ContentBlock)
     case status(StatusPayload)
     case done(StreamDonePayload)
