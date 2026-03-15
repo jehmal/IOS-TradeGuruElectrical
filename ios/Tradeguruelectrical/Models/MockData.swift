@@ -3,7 +3,7 @@ import Foundation
 
 nonisolated enum MockData {
 
-    static let allConversations: [Conversation] = [
+    nonisolated(unsafe) static let allConversations: [Conversation] = [
         faultFinderConversation,
         learnConversation,
         researchConversation
@@ -11,7 +11,7 @@ nonisolated enum MockData {
 
     // MARK: - Fault Finder — RCD Tripping
 
-    static let faultFinderConversation = Conversation(
+    nonisolated(unsafe) static let faultFinderConversation = Conversation(
         title: "RCD keeps tripping",
         messages: [
             ChatMessage(
@@ -92,7 +92,7 @@ nonisolated enum MockData {
 
     // MARK: - Learn — Cable Sizing
 
-    static let learnConversation = Conversation(
+    nonisolated(unsafe) static let learnConversation = Conversation(
         title: "Cable sizing for power circuits",
         messages: [
             ChatMessage(
@@ -123,7 +123,6 @@ nonisolated enum MockData {
                     ),
                     ContentBlock(
                         type: .table,
-                        headers: ["Cable Size", "Base Rating (Enclosed)", "Derated (Insulation)", "Typical Use"],
                         rows: [
                             ["1.0 mm²", "12A", "6A", "Lighting circuits (10A MCB)"],
                             ["1.5 mm²", "15A", "7.5A", "Lighting circuits (16A MCB)"],
@@ -131,7 +130,8 @@ nonisolated enum MockData {
                             ["4.0 mm²", "27A", "13.5A", "High-load GPO or cooktop circuits"],
                             ["6.0 mm²", "34A", "17A", "Ovens, hot water, large A/C"],
                             ["10.0 mm²", "46A", "23A", "Sub-mains, EV chargers"]
-                        ]
+                        ],
+                        headers: ["Cable Size", "Base Rating (Enclosed)", "Derated (Insulation)", "Typical Use"]
                     )
                 ],
                 mode: .learn
@@ -167,7 +167,7 @@ nonisolated enum MockData {
 
     // MARK: - Research — EV Charger Installation
 
-    static let researchConversation = Conversation(
+    nonisolated(unsafe) static let researchConversation = Conversation(
         title: "EV charger installation requirements",
         messages: [
             ChatMessage(
@@ -196,7 +196,6 @@ nonisolated enum MockData {
                     ),
                     ContentBlock(
                         type: .table,
-                        headers: ["Specification", "Single-Phase", "Three-Phase"],
                         rows: [
                             ["Supply Voltage", "230V AC", "415V AC"],
                             ["Typical Current", "32A", "32A per phase"],
@@ -206,7 +205,8 @@ nonisolated enum MockData {
                             ["RCD Requirement", "30mA Type A or Type B", "30mA Type B (recommended)"],
                             ["Dedicated Circuit", "Required", "Required"],
                             ["Metering", "Optional sub-meter", "Recommended sub-meter"]
-                        ]
+                        ],
+                        headers: ["Specification", "Single-Phase", "Three-Phase"]
                     )
                 ],
                 mode: .research

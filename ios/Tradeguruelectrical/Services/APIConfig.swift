@@ -2,7 +2,7 @@ import Foundation
 
 nonisolated enum APIConfig {
     #if DEBUG
-    static var useMockData = false
+    nonisolated(unsafe) static var useMockData = false
     #endif
     static let baseURL = "https://tradeguru.com.au/api/v1"
     static let platform = "ios"
