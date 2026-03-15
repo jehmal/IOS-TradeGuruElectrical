@@ -12,7 +12,11 @@ struct TradeguruelectricalApp: App {
             DataMigrator.migrateIfNeeded(context: container.mainContext)
             self.container = container
         } catch {
-            fatalError("SwiftData initialization failed: \(error)")
+            let fallback = try! ModelContainer(
+                for: Conversation.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            self.container = fallback
         }
         Task { await AuthManager.shared.restoreSession() }
     }

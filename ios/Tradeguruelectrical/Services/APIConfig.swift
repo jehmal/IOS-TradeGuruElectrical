@@ -13,10 +13,7 @@ nonisolated enum APIConfig: Sendable {
 
     static func url(_ path: String) -> URL {
         let clean = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        guard let url = URL(string: "\(baseURL)/\(clean)") else {
-            fatalError("Invalid API URL: \(baseURL)/\(clean)")
-        }
-        return url
+        return URL(string: "\(baseURL)/\(clean)") ?? URL(string: baseURL)!
     }
 
     static func headers(deviceId: String, jwt: String? = nil) -> [String: String] {

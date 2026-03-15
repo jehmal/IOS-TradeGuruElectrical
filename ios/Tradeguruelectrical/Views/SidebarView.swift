@@ -70,8 +70,8 @@ struct SidebarView: View {
                 }
                 .onDelete { indexSet in
                     for index in indexSet {
-                        let conversation = filteredConversations[index]
-                        onDelete(conversation)
+                        guard index < filteredConversations.count else { continue }
+                        onDelete(filteredConversations[index])
                     }
                 }
             }

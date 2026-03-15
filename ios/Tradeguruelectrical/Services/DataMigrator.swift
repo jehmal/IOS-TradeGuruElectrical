@@ -8,8 +8,11 @@ enum DataMigrator {
     static func migrateIfNeeded(context: ModelContext) {
         guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
 
-        let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent(fileName)
+        guard let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            UserDefaults.standard.set(true, forKey: migrationKey)
+            return
+        }
+        let fileURL = documentsDir.appendingPathComponent(fileName)
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             UserDefaults.standard.set(true, forKey: migrationKey)

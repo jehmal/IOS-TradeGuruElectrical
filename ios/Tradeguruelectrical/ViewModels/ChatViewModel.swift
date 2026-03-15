@@ -47,7 +47,7 @@ class ChatViewModel {
 
     func send(_ text: String, mode: ThinkingMode, attachments: [MessageAttachment]? = nil) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasAttachments = attachments != nil && !attachments!.isEmpty
+        let hasAttachments = !(attachments?.isEmpty ?? true)
         guard !trimmed.isEmpty || hasAttachments else { return }
         let displayText = trimmed.isEmpty ? "[Photo]" : text
 
@@ -77,7 +77,7 @@ class ChatViewModel {
 
     func sendWithVision(_ text: String, mode: ThinkingMode, attachments: [MessageAttachment]?) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasAttachments = attachments != nil && !attachments!.isEmpty
+        let hasAttachments = !(attachments?.isEmpty ?? true)
         guard !trimmed.isEmpty || hasAttachments else { return }
         let displayText = trimmed.isEmpty ? "[Photo]" : text
 
@@ -107,7 +107,7 @@ class ChatViewModel {
 
     func sendWithDocument(_ text: String, mode: ThinkingMode, attachments: [MessageAttachment]?) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let hasAttachments = attachments != nil && !attachments!.isEmpty
+        let hasAttachments = !(attachments?.isEmpty ?? true)
         guard !trimmed.isEmpty || hasAttachments else { return }
 
         let docAttachment = attachments?.first(where: { $0.type == .document })
