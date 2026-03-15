@@ -13,22 +13,32 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+      - name: List available Xcode versions
+        run: ls /Applications/ | grep Xcode
+
+      - name: Select latest Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          xcodebuild -version
+
+      - name: List available simulators
+        run: xcrun simctl list devices available | grep iPhone | head -5
 
       - name: Build iOS Package
         run: |
           cd ios
           xcodebuild build \
             -scheme Tradeguruelectrical \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.0' \
+            -destination 'generic/platform=iOS Simulator' \
             -sdk iphonesimulator \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tail -30
+            2>&1 | tail -50
 
       - name: Build Result
         if: success()
