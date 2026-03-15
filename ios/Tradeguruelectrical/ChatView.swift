@@ -55,9 +55,7 @@ struct ChatView: View {
         .onChange(of: selectedMode) { _, newMode in
             userDismissedCard = false
             viewModel.selectedMode = newMode
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showModeCard = true
-            }
+            showModeCard = true
         }
     }
 
@@ -76,7 +74,7 @@ struct ChatView: View {
                     .onTapGesture {
                         dismissModeCard()
                     }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity)
                     .padding(.top, 16)
                 }
 
