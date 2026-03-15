@@ -29,7 +29,7 @@ class ChatViewModel {
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        deviceId = DeviceManager.getOrCreateDeviceId()
+        deviceId = DeviceManager.deviceIdOrFallback()
         #if DEBUG
         if APIConfig.useMockData {
             conversations = MockData.allConversations
@@ -176,11 +176,8 @@ class ChatViewModel {
     }
 
     func searchConversations(_ query: String) -> [Conversation] {
-        let descriptor = FetchDescriptor<Conversation>(
-            predicate: #Predicate { $0.title.localizedStandardContains(query) },
-            sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let lowered = query.lowercased()
+        return conversations.filter { $0.title.lowercased().contains(lowered) }
     }
 
     func dismissError() {
@@ -437,14 +434,12 @@ class ChatViewModel {
     #endif
 
     private func registerDeviceIfNeeded() async {
-        let stored = DeviceManager.getOrCreateDeviceId()
-        if stored.isEmpty || stored == "pending" {
+        if deviceId.isEmpty || deviceId == "pending" {
             do {
                 let registeredId = try await TradeGuruAPI.registerDevice()
                 DeviceManager.save(registeredId)
                 deviceId = registeredId
             } catch {
-                self.error = "Device registration failed"
             }
         }
     }
@@ -491,10 +486,23 @@ class ChatViewModel {
     // MARK: - Helpers
 
     private func refreshConversations() {
-        var descriptor = FetchDescriptor<Conversation>(
-            sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = 50
-        conversations = (try? modelContext.fetch(descriptor)) ?? []
+        do {
+            var descriptor = FetchDescriptor<Conversation>(
+                sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
+            )
+            descriptor.fetchLimit = 50
+            conversations = try modelContext.fetch(descriptor)
+        } catch {
+            conversations = []
+        }
+    }
+
+    private func safeSave() {
+        do {
+            if modelContext.hasChanges {
+                try modelContext.save()
+            }
+        } catch {
+        }
     }
 }

@@ -14,11 +14,24 @@ enum TradeGuruAPI {
 
     static func registerDevice() async throws -> String {
         var req = APIConfig.request("device/register", deviceId: "pending")
+
+        let localeId: String = {
+            if let preferred = Locale.preferredLanguages.first { return preferred }
+            return "en"
+        }()
+        let timezoneId: String = {
+            let tz = TimeZone.current
+            let seconds = tz.secondsFromGMT()
+            let hours = seconds / 3600
+            let sign = hours >= 0 ? "+" : ""
+            return "GMT\(sign)\(hours)"
+        }()
+
         let body: [String: String] = [
             "platform": APIConfig.platform,
             "app_version": APIConfig.appVersion,
-            "locale": Locale.current.identifier,
-            "timezone": TimeZone.current.identifier,
+            "locale": localeId,
+            "timezone": timezoneId,
         ]
         req.httpBody = try JSONEncoder().encode(body)
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")

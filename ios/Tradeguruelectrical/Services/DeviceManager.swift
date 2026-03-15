@@ -4,6 +4,7 @@ import Security
 nonisolated struct DeviceManager: Sendable {
     private static let service = "com.tradeguru.electrical"
     private static let account = "device_id"
+    private static let userDefaultsKey = "tradeguru_device_id_fallback"
 
     static func getOrCreateDeviceId() -> String {
         if let existing = readFromKeychain() {
@@ -14,8 +15,22 @@ nonisolated struct DeviceManager: Sendable {
         return newId
     }
 
+    static func deviceIdOrFallback() -> String {
+        if let existing = readFromKeychain() {
+            return existing
+        }
+        if let fallback = UserDefaults.standard.string(forKey: userDefaultsKey), !fallback.isEmpty {
+            return fallback
+        }
+        let newId = UUID().uuidString
+        saveToKeychain(newId)
+        UserDefaults.standard.set(newId, forKey: userDefaultsKey)
+        return newId
+    }
+
     static func save(_ deviceId: String) {
         saveToKeychain(deviceId)
+        UserDefaults.standard.set(deviceId, forKey: userDefaultsKey)
     }
 
     private static func readFromKeychain() -> String? {

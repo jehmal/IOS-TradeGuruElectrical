@@ -8,21 +8,20 @@ enum DataMigrator {
     static func migrateIfNeeded(context: ModelContext) {
         guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
 
+        defer { UserDefaults.standard.set(true, forKey: migrationKey) }
+
         guard let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            UserDefaults.standard.set(true, forKey: migrationKey)
             return
         }
         let fileURL = documentsDir.appendingPathComponent(fileName)
 
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            UserDefaults.standard.set(true, forKey: migrationKey)
+        guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
             return
         }
 
         do {
             let data = try Data(contentsOf: fileURL)
-            let decoder = JSONDecoder()
-            let legacyConversations = try decoder.decode([LegacyConversation].self, from: data)
+            let legacyConversations = try JSONDecoder().decode([LegacyConversation].self, from: data)
 
             for legacy in legacyConversations {
                 let conversation = Conversation(
@@ -37,11 +36,9 @@ enum DataMigrator {
             }
 
             try context.save()
-            try FileManager.default.removeItem(at: fileURL)
+            try? FileManager.default.removeItem(at: fileURL)
         } catch {
         }
-
-        UserDefaults.standard.set(true, forKey: migrationKey)
     }
 
     private static func convertMessage(_ legacy: LegacyMessage) -> ChatMessage {

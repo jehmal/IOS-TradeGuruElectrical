@@ -98,7 +98,7 @@ class AuthManager {
     func linkDevice() async {
         guard let jwt = tokens?.accessToken else { return }
 
-        let deviceId = DeviceManager.getOrCreateDeviceId()
+        let deviceId = DeviceManager.deviceIdOrFallback()
         var req = APIConfig.request("device/link", deviceId: deviceId, jwt: jwt)
         let body: [String: String] = ["device_id": deviceId]
         req.httpBody = try? JSONEncoder().encode(body)
@@ -115,9 +115,10 @@ class AuthManager {
     }
 
     func restoreSession() async {
-        guard let savedTokens: AuthTokens = KeychainHelper.load(forKey: "tokens"),
-              let savedUser: AuthUser = KeychainHelper.load(forKey: "user")
-        else { return }
+        let savedTokens: AuthTokens? = KeychainHelper.load(forKey: "tokens")
+        let savedUser: AuthUser? = KeychainHelper.load(forKey: "user")
+
+        guard let savedTokens, let savedUser else { return }
 
         if savedTokens.expiresAt > Date() {
             tokens = savedTokens

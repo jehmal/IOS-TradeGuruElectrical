@@ -10,7 +10,8 @@ struct SidebarView: View {
 
     private var filteredConversations: [Conversation] {
         if searchText.isEmpty { return conversations }
-        return conversations.filter { $0.title.localizedStandardContains(searchText) }
+        let lowered = searchText.lowercased()
+        return conversations.filter { $0.title.lowercased().contains(lowered) }
     }
 
     var body: some View {

@@ -7,21 +7,33 @@ struct TradeguruelectricalApp: App {
     let container: ModelContainer
 
     init() {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        if let appSupport, !FileManager.default.fileExists(atPath: appSupport.path) {
-            try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        let useInMemory = Self.shouldUseInMemoryStore()
+
+        if !useInMemory {
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            if let appSupport, !FileManager.default.fileExists(atPath: appSupport.path) {
+                try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+            }
         }
 
-        do {
-            let container = try ModelContainer(for: Conversation.self)
-            DataMigrator.migrateIfNeeded(context: container.mainContext)
-            self.container = container
-        } catch {
-            let fallback = try! ModelContainer(
+        if useInMemory {
+            let inMemory = try! ModelContainer(
                 for: Conversation.self,
                 configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             )
-            self.container = fallback
+            self.container = inMemory
+        } else {
+            do {
+                let container = try ModelContainer(for: Conversation.self)
+                DataMigrator.migrateIfNeeded(context: container.mainContext)
+                self.container = container
+            } catch {
+                let fallback = try! ModelContainer(
+                    for: Conversation.self,
+                    configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+                )
+                self.container = fallback
+            }
         }
         Task { await AuthManager.shared.restoreSession() }
     }
@@ -35,6 +47,35 @@ struct TradeguruelectricalApp: App {
             if phase == .active {
                 Task { await AuthManager.shared.refreshTokenIfNeeded() }
             }
+        }
+    }
+
+    private static func shouldUseInMemoryStore() -> Bool {
+        if !canWriteToAppSupport() {
+            return true
+        }
+        return false
+    }
+
+    private static func canWriteToAppSupport() -> Bool {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return false
+        }
+        if !FileManager.default.fileExists(atPath: appSupport.path) {
+            do {
+                try FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+            } catch {
+                return false
+            }
+        }
+        let testFile = appSupport.appendingPathComponent(".tg_write_test_\(ProcessInfo.processInfo.processIdentifier)")
+        let testData = Data("test".utf8)
+        do {
+            try testData.write(to: testFile, options: .atomic)
+            try FileManager.default.removeItem(at: testFile)
+            return true
+        } catch {
+            return false
         }
     }
 }

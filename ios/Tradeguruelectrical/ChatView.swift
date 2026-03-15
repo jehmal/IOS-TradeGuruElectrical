@@ -138,7 +138,7 @@ struct ChatView: View {
                 Task { await viewModel.rateLastResponse(stars: stars) }
             },
             onFlag: { reason in
-                Task { try? await TradeGuruAPI.feedback(responseId: viewModel.lastResponseId ?? "", reason: reason, mode: viewModel.selectedMode, deviceId: DeviceManager.getOrCreateDeviceId(), jwt: AuthManager.shared.tokens?.accessToken) }
+                Task { try? await TradeGuruAPI.feedback(responseId: viewModel.lastResponseId ?? "", reason: reason, mode: viewModel.selectedMode, deviceId: DeviceManager.deviceIdOrFallback(), jwt: AuthManager.shared.tokens?.accessToken) }
             },
             onSpeak: { text in
                 Task { await viewModel.speakText(text) }

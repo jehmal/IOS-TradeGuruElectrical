@@ -21,6 +21,7 @@
    - **`for await` on throwing sequences:** Use `for try await` when iterating sequences that can throw (e.g., `URLSession.AsyncBytes.lines`). Use `for await` only on non-throwing `AsyncStream`.
    - **`@preconcurrency import`:** Use `@preconcurrency import AVFoundation`, `@preconcurrency import AuthenticationServices`, or any other Apple framework that has non-Sendable types you need to store as properties.
    - **Delegate methods:** Delegate methods called by Apple frameworks off-main-thread must be `nonisolated`. Inside them, hop back to MainActor with `Task { @MainActor in ... }` to access MainActor-isolated properties.
+9. **SwiftUI view function size limit.** Any SwiftUI function returning `some View` must not exceed 60 lines of view-building code. When a view body or helper function grows beyond this, extract logical sections (lists, overlays, toolbars, input areas, error banners) into separate private functions that each return `some View`. This prevents Swift type-checker timeouts ("unable to type-check this expression in reasonable time") caused by deeply nested closures, conditionals, and generic modifier chains in a single expression.
 
 ## Orchestration Rules
 
