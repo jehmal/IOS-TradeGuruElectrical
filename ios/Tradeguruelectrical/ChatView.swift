@@ -33,145 +33,11 @@ struct ChatView: View {
                 .padding(.vertical, 8)
                 .background(Color.tradeBg)
 
-            ZStack {
-                Color.tradeBg.ignoresSafeArea()
+            conversationArea(viewModel: viewModel)
 
-                VStack {
-                    if showModeCard {
-                        ModeInfoCard(mode: selectedMode) {
-                            dismissModeCard()
-                        }
-                        .onTapGesture {
-                            dismissModeCard()
-                        }
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                        .padding(.top, 16)
-                    }
+            errorBanner(viewModel: viewModel)
 
-                    if let conversation = viewModel.activeConversation,
-                       !conversation.messages.isEmpty || !viewModel.streamingBlocks.isEmpty {
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                LazyVStack(spacing: 16) {
-                                    ForEach(conversation.messages) { message in
-                                        MessageBubble(
-                                            message: message,
-                                            isLastAssistantMessage: message.id == conversation.messages.last?.id && message.role == .assistant,
-                                            onRate: { stars in
-                                                Task { await viewModel.rateLastResponse(stars: stars) }
-                                            },
-                                            onFlag: { reason in
-                                                Task { try? await TradeGuruAPI.feedback(responseId: viewModel.lastResponseId ?? "", reason: reason, mode: viewModel.selectedMode, deviceId: DeviceManager.getOrCreateDeviceId(), jwt: AuthManager.shared.tokens?.accessToken) }
-                                            },
-                                            onSpeak: { text in
-                                                Task { await viewModel.speakText(text) }
-                                            }
-                                        )
-                                    }
-
-                                    if viewModel.isStreaming && !viewModel.streamingBlocks.isEmpty {
-                                        streamingBubble(viewModel: viewModel)
-                                    } else if viewModel.isStreaming && viewModel.streamingBlocks.isEmpty {
-                                        typingIndicator(viewModel: viewModel)
-                                    }
-
-                                    Color.clear.frame(height: 1).id("bottom")
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                            }
-                            .onChange(of: viewModel.activeConversation?.messages.count) { _, _ in
-                                withAnimation {
-                                    proxy.scrollTo("bottom", anchor: .bottom)
-                                }
-                            }
-                            .onChange(of: viewModel.streamingBlocks.count) { _, _ in
-                                withAnimation {
-                                    proxy.scrollTo("bottom", anchor: .bottom)
-                                }
-                            }
-                        }
-                    } else {
-                        Spacer()
-
-                        Image("TradeGuruLogo")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 180, height: 180)
-                            .foregroundStyle(Color.tradeText)
-                            .opacity(0.08)
-
-                        Spacer()
-                    }
-                }
-            }
-
-            if let errorMessage = viewModel.error {
-                HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.red)
-
-                    Text(errorMessage)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.red)
-                        .lineLimit(2)
-
-                    Spacer()
-
-                    Button {
-                        viewModel.retryLastRequest()
-                    } label: {
-                        Text("Retry")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.red)
-                    }
-                    .frame(height: 44)
-
-                    Button {
-                        viewModel.dismissError()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.red)
-                    }
-                    .frame(width: 44, height: 44)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.red.opacity(0.1))
-            }
-
-            ChatInputBar(
-                text: $inputText,
-                selectedMode: $selectedMode,
-                onSend: { text, attachments in
-                    let hasImageAttachment = attachments?.contains(where: { $0.type == .image && $0.thumbnailData != nil }) ?? false
-                    let hasDocumentAttachment = attachments?.contains(where: { $0.type == .document }) ?? false
-                    if hasDocumentAttachment {
-                        viewModel.sendWithDocument(text, mode: selectedMode, attachments: attachments)
-                    } else if hasImageAttachment {
-                        viewModel.sendWithVision(text, mode: selectedMode, attachments: attachments)
-                    } else {
-                        viewModel.send(text, mode: selectedMode, attachments: attachments)
-                    }
-                    inputText = ""
-                },
-                onInputFocus: {
-                    dismissModeCard()
-                },
-                onVoiceInput: { transcribedText in
-                    inputText = transcribedText
-                },
-                onAudioRecorded: { audioData in
-                    Task {
-                        if let text = await viewModel.transcribeAudio(audioData) {
-                            inputText = text
-                        }
-                    }
-                }
-            )
+            inputBar(viewModel: viewModel)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
@@ -183,33 +49,207 @@ struct ChatView: View {
         }
         .overlay {
             if showSidebar {
-                SidebarView(
-                    conversations: viewModel.conversations,
-                    onSelect: { conversation in
-                        viewModel.selectConversation(conversation)
-                        withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
-                    },
-                    onDelete: { conversation in
-                        viewModel.deleteConversation(conversation)
-                    },
-                    onNewChat: {
-                        viewModel.newConversation(mode: selectedMode)
-                        withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
-                    },
-                    onClose: {
-                        withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
-                    }
-                )
+                sidebarOverlay(viewModel: viewModel)
             }
         }
         .onChange(of: selectedMode) { _, newMode in
             userDismissedCard = false
-            viewModel?.selectedMode = newMode
+            viewModel.selectedMode = newMode
             withAnimation(.easeInOut(duration: 0.2)) {
                 showModeCard = true
             }
         }
     }
+
+    // MARK: - Conversation Area
+
+    @ViewBuilder
+    private func conversationArea(viewModel: ChatViewModel) -> some View {
+        ZStack {
+            Color.tradeBg.ignoresSafeArea()
+
+            VStack {
+                if showModeCard {
+                    ModeInfoCard(mode: selectedMode) {
+                        dismissModeCard()
+                    }
+                    .onTapGesture {
+                        dismissModeCard()
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .padding(.top, 16)
+                }
+
+                if let conversation = viewModel.activeConversation,
+                   !conversation.messages.isEmpty || !viewModel.streamingBlocks.isEmpty {
+                    messageList(viewModel: viewModel, conversation: conversation)
+                } else {
+                    Spacer()
+                    emptyStateLogo
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    private var emptyStateLogo: some View {
+        Image("TradeGuruLogo")
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 180, height: 180)
+            .foregroundStyle(Color.tradeText)
+            .opacity(0.08)
+    }
+
+    // MARK: - Message List
+
+    private func messageList(viewModel: ChatViewModel, conversation: Conversation) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    ForEach(conversation.messages) { message in
+                        messageBubbleRow(viewModel: viewModel, message: message, conversation: conversation)
+                    }
+
+                    if viewModel.isStreaming && !viewModel.streamingBlocks.isEmpty {
+                        streamingBubble(viewModel: viewModel)
+                    } else if viewModel.isStreaming && viewModel.streamingBlocks.isEmpty {
+                        typingIndicator(viewModel: viewModel)
+                    }
+
+                    Color.clear.frame(height: 1).id("bottom")
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+            .onChange(of: viewModel.activeConversation?.messages.count) { _, _ in
+                withAnimation {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+            .onChange(of: viewModel.streamingBlocks.count) { _, _ in
+                withAnimation {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+        }
+    }
+
+    private func messageBubbleRow(viewModel: ChatViewModel, message: ChatMessage, conversation: Conversation) -> some View {
+        MessageBubble(
+            message: message,
+            isLastAssistantMessage: message.id == conversation.messages.last?.id && message.role == .assistant,
+            onRate: { stars in
+                Task { await viewModel.rateLastResponse(stars: stars) }
+            },
+            onFlag: { reason in
+                Task { try? await TradeGuruAPI.feedback(responseId: viewModel.lastResponseId ?? "", reason: reason, mode: viewModel.selectedMode, deviceId: DeviceManager.getOrCreateDeviceId(), jwt: AuthManager.shared.tokens?.accessToken) }
+            },
+            onSpeak: { text in
+                Task { await viewModel.speakText(text) }
+            }
+        )
+    }
+
+    // MARK: - Error Banner
+
+    @ViewBuilder
+    private func errorBanner(viewModel: ChatViewModel) -> some View {
+        if let errorMessage = viewModel.error {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.red)
+
+                Text(errorMessage)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
+
+                Spacer()
+
+                Button {
+                    viewModel.retryLastRequest()
+                } label: {
+                    Text("Retry")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.red)
+                }
+                .frame(height: 44)
+
+                Button {
+                    viewModel.dismissError()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.red)
+                }
+                .frame(width: 44, height: 44)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.red.opacity(0.1))
+        }
+    }
+
+    // MARK: - Input Bar
+
+    private func inputBar(viewModel: ChatViewModel) -> some View {
+        ChatInputBar(
+            text: $inputText,
+            selectedMode: $selectedMode,
+            onSend: { text, attachments in
+                let hasImageAttachment = attachments?.contains(where: { $0.type == .image && $0.thumbnailData != nil }) ?? false
+                let hasDocumentAttachment = attachments?.contains(where: { $0.type == .document }) ?? false
+                if hasDocumentAttachment {
+                    viewModel.sendWithDocument(text, mode: selectedMode, attachments: attachments)
+                } else if hasImageAttachment {
+                    viewModel.sendWithVision(text, mode: selectedMode, attachments: attachments)
+                } else {
+                    viewModel.send(text, mode: selectedMode, attachments: attachments)
+                }
+                inputText = ""
+            },
+            onInputFocus: {
+                dismissModeCard()
+            },
+            onVoiceInput: { transcribedText in
+                inputText = transcribedText
+            },
+            onAudioRecorded: { audioData in
+                Task {
+                    if let text = await viewModel.transcribeAudio(audioData) {
+                        inputText = text
+                    }
+                }
+            }
+        )
+    }
+
+    // MARK: - Sidebar Overlay
+
+    private func sidebarOverlay(viewModel: ChatViewModel) -> some View {
+        SidebarView(
+            conversations: viewModel.conversations,
+            onSelect: { conversation in
+                viewModel.selectConversation(conversation)
+                withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
+            },
+            onDelete: { conversation in
+                viewModel.deleteConversation(conversation)
+            },
+            onNewChat: {
+                viewModel.newConversation(mode: selectedMode)
+                withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
+            },
+            onClose: {
+                withAnimation(.easeInOut(duration: 0.25)) { showSidebar = false }
+            }
+        )
+    }
+
+    // MARK: - Helpers
 
     private func dismissModeCard() {
         withAnimation(.easeOut(duration: 0.15)) {
