@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-nonisolated enum UserTier: String, Codable {
+enum UserTier: String, Codable, Sendable {
     case free
     case pro
     case unlimited
@@ -14,7 +14,7 @@ nonisolated enum UserTier: String, Codable {
         }
     }
 
-    @MainActor var color: Color {
+    var color: Color {
         switch self {
         case .free: .tradeTextSecondary
         case .pro: .modeLearn

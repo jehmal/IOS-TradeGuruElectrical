@@ -17,7 +17,7 @@ nonisolated enum ContentBlockType: String, Codable, CaseIterable {
 }
 
 @Model
-class ContentBlock {
+class ContentBlock: Decodable {
     var id: UUID
     var type: ContentBlockType
     var content: String?
@@ -34,6 +34,10 @@ class ContentBlock {
     var level: Int?
     var style: String?
     var message: ChatMessage?
+
+    enum CodingKeys: String, CodingKey {
+        case id, type, content, title, steps, items, language, code, clause, summary, url, rows, headers, level, style
+    }
 
     init(
         id: UUID = UUID(),
@@ -67,12 +71,6 @@ class ContentBlock {
         self.headers = headers
         self.level = level
         self.style = style
-    }
-}
-
-extension ContentBlock: Decodable {
-    enum CodingKeys: String, CodingKey {
-        case id, type, content, title, steps, items, language, code, clause, summary, url, rows, headers, level, style
     }
 
     required convenience init(from decoder: Decoder) throws {

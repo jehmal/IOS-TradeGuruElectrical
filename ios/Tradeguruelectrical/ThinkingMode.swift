@@ -1,6 +1,6 @@
 import SwiftUI
 
-nonisolated enum ThinkingMode: String, CaseIterable, Identifiable, Codable {
+enum ThinkingMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case faultFinder = "fault_finder"
     case learn = "learn"
     case research = "research"
@@ -31,7 +31,7 @@ nonisolated enum ThinkingMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    @MainActor var color: Color {
+    var color: Color {
         switch self {
         case .faultFinder: .modeFaultFinder
         case .learn: .modeLearn
