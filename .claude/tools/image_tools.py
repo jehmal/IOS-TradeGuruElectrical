@@ -62,20 +62,25 @@ def _openai_generate_image(prompt: str, size: str = "1024x1024", timeout: int = 
 
     is_gpt_image = model.startswith("gpt-image")
 
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "n": 1,
-        "size": size,
-        "response_format": "b64_json",
-    }
-
-    # GPT image models support background parameter
     if is_gpt_image:
         bg = get_env("IMAGE_GEN_BACKGROUND", default="auto")
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+            "output_format": "png",
+        }
         if bg in VALID_BACKGROUNDS:
             payload["background"] = bg
-        payload["output_format"] = "png"
+    else:
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+            "response_format": "b64_json",
+        }
 
     data = json.dumps(payload).encode("utf-8")
     req = Request(
@@ -90,7 +95,8 @@ def _openai_generate_image(prompt: str, size: str = "1024x1024", timeout: int = 
     try:
         with urlopen(req, timeout=timeout) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            b64 = result["data"][0]["b64_json"]
+            item = result["data"][0]
+            b64 = item.get("b64_json") or item.get("b64") or ""
             return {"b64_data": b64, "mime_type": "image/png"}
     except HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
@@ -174,7 +180,8 @@ def _openai_edit_image(prompt: str, input_images: list, timeout: int = 120) -> d
     try:
         with urlopen(req, timeout=timeout) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            b64 = result["data"][0]["b64_json"]
+            item = result["data"][0]
+            b64 = item.get("b64_json") or item.get("b64") or ""
             return {"b64_data": b64, "mime_type": "image/png"}
     except HTTPError as e:
         body_text = e.read().decode("utf-8", errors="replace")

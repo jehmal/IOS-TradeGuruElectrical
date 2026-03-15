@@ -32,6 +32,7 @@ struct ModeInfoCard: View {
                     .foregroundStyle(Color.tradeTextSecondary)
                     .frame(width: 24, height: 24)
             }
+            .accessibilityLabel("Dismiss mode info")
         }
         .padding(12)
         .background(Color.tradeSurface)

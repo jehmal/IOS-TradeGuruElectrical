@@ -1,0 +1,11 @@
+.env
+*.xcuserdata
+.DS_Store
+.build/
+DerivedData/
+*.pyc
+__pycache__/
+.pi-teams/
+.mulch/
+__pycache__/
+*.pyc

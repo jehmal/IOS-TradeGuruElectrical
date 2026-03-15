@@ -337,6 +337,58 @@ body {
 .device-frame.watch .nav-icon-btn { width:28px; height:28px; }
 .device-frame.watch .nav-icon-btn svg { width:14px; height:10px; }
 
+/* Pipeline Status Bar */
+.pipeline-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 8px 16px;
+    padding: 8px 16px;
+    background: var(--trade-surface);
+    border-radius: 20px;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease, height 0.3s ease, margin 0.3s ease;
+}
+.pipeline-status.hidden {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+.pipeline-status-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+.pipeline-status-text {
+    font-size: 13px;
+    color: var(--trade-text-secondary);
+}
+.pipeline-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.pipeline-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--trade-text-secondary);
+    animation: dotPulse 1.2s ease-in-out infinite;
+}
+.pipeline-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+.pipeline-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1.0; }
+}
+.device-frame.watch .pipeline-status { margin:4px 8px; padding:4px 8px; gap:4px; }
+.device-frame.watch .pipeline-status-icon { font-size:12px; }
+.device-frame.watch .pipeline-status-text { font-size:10px; }
+.device-frame.watch .pipeline-dots .dot { width:4px; height:4px; }
+
 /* Mode Info Card */
 .mode-card {
     margin: 16px 16px 0;
@@ -351,7 +403,7 @@ body {
     transition: all 0.2s;
     cursor: pointer;
 }
-.mode-card.hidden { opacity:0; height:0; margin:0; padding:0; overflow:hidden; pointer-events:none; }
+.mode-card.hidden { opacity:0; height:0; margin:0; padding:0; overflow:hidden; pointer-events:none; transform:translateY(-8px); }
 .device-frame.watch .mode-card { margin:4px 8px 0; padding:6px; gap:6px; border-radius:8px; }
 .mode-card-icon {
     width:32px; height:32px;
@@ -363,7 +415,7 @@ body {
 .device-frame.watch .mode-card-icon { width:20px; height:20px; border-radius:5px; }
 .device-frame.watch .mode-card-icon svg { width:10px; height:10px; }
 .mode-card-text { flex:1; }
-.mode-card-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+.mode-card-title { font-size:16px; font-weight:600; margin-bottom:4px; color:var(--trade-text); }
 .device-frame.watch .mode-card-title { font-size:11px; margin-bottom:2px; }
 .mode-card-body { font-size:14px; color:var(--trade-text-secondary); line-height:1.45; }
 .device-frame.watch .mode-card-body { font-size:9px; line-height:1.3; }
@@ -421,6 +473,7 @@ body {
     max-width: 330px;
     padding: 14px;
     background: var(--trade-surface);
+    color: var(--trade-text);
     border-radius: 16px;
     display: flex;
     flex-direction: column;
@@ -673,6 +726,7 @@ body {
     font-size:16px;
     color:var(--trade-text);
     padding:8px 0;
+    line-height:1.4;
 }
 .device-frame.watch .text-input { font-size:10px; padding:4px 0; }
 .text-input::placeholder { color:var(--trade-text-secondary); }
@@ -807,6 +861,8 @@ body {
 .device-frame.ipad .mode-card-body { font-size:15px; }
 .device-frame.ipad .watermark-logo { width:240px; height:240px; }
 .device-frame.ipad .home-indicator { width:180px; }
+
+@keyframes pulseDot { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
 </style>
 </head>
 <body>
@@ -835,9 +891,17 @@ body {
         <option value="sidebar">Sidebar</option>
         <option value="mode-selector">Mode Selector</option>
         <option value="chat-input">Chat Input Bar</option>
+        <option value="voice-input">Voice Input</option>
+        <option value="pipeline-status">PipelineStatusView</option>
+        <option value="onboarding">Onboarding</option>
+        <option value="settings">Settings</option>
+        <option value="disclaimer">Safety Disclaimer</option>
+        <option value="camera">Camera</option>
     </select>
     <div class="sep"></div>
     <button id="themeBtn" onclick="toggleTheme()">&#9790; Dark</button>
+    <div class="sep"></div>
+    <button id="mockBtn" class="active" onclick="toggleMock()">Mock: OFF</button>
     <div class="sep"></div>
     <span style="color:#666;font-size:10px;letter-spacing:0.5px;text-transform:uppercase">Workbench</span>
     <button id="penBtn" onclick="togglePen()">&#9998; Pen</button>
@@ -866,7 +930,7 @@ body {
 </div>
 
 <script>
-const LOGO_B64 = "data:image/png;base64,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";
+const LOGO_URL = 'tradeguru-logo.png';
 
 const MODES = [
     { key:'faultFinder', name:'Fault Finder', icon:'\u26A1', desc:'Get it fixed', color:'--mode-fault-finder', bg:'--mode-fault-12',
@@ -996,6 +1060,406 @@ let currentMode = 0;
 let isDark = false;
 let sidebarOpen = false;
 let modeCardDismissed = false;
+let mockMode = false;
+let currentConversation = 0;
+let htmlIsRecording = false;
+let htmlMediaRecorder = null;
+let htmlRecordedChunks = [];
+let htmlIsStreaming = false;
+let htmlError = null;
+let htmlAttachmentActive = false;
+let htmlAttachImageData = null;
+let htmlAttachFileName = null;
+let htmlAttachThumbUrl = null;
+let htmlAttachType = 'image';
+let htmlAttachFileData = null;
+let htmlSidebarSearch = '';
+let htmlStreamingBlocks = [];
+let htmlLastResponseId = null;
+let htmlPipelineStage = 'idle';
+let htmlInputText = '';
+let htmlOnboardingPage = 0;
+let htmlSettingsSignedIn = false;
+let htmlLastSendType = 'text';
+let htmlLastSendImageBase64 = null;
+
+const API_BASE = 'https://tradeguru.com.au/api/v1';
+const MODE_KEYS = ['fault_finder', 'learn', 'research'];
+
+const FALLBACK_DEVICE_ID = '3b929e8d-15b1-4c90-b98e-f4c7c80aeed3';
+
+function getDeviceId() {
+    return localStorage.getItem('tg_device_id') || FALLBACK_DEVICE_ID;
+}
+
+async function ensureDevice() {
+    let id = localStorage.getItem('tg_device_id');
+    if (id) return id;
+    try {
+        const res = await fetch(API_BASE + '/device/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                platform: 'web',
+                os_version: navigator.userAgent.substring(0, 64),
+                app_version: '1.0.0',
+                locale: navigator.language || 'en-AU',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Australia/Sydney'
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.device_id) {
+                localStorage.setItem('tg_device_id', data.device_id);
+                return data.device_id;
+            }
+        }
+    } catch (e) {
+        console.error('Device registration failed, using fallback:', e);
+    }
+    localStorage.setItem('tg_device_id', FALLBACK_DEVICE_ID);
+    return FALLBACK_DEVICE_ID;
+}
+
+async function apiChat(messages, mode) {
+    const deviceId = await ensureDevice();
+    if (!deviceId) {
+        htmlError = 'Failed to register device. Check console for details.';
+        htmlIsStreaming = false;
+        render();
+        return;
+    }
+    const conv = currentConversation >= 0 ? MOCK.conversations[currentConversation] : null;
+    if (!conv) return;
+
+    htmlIsStreaming = true;
+    htmlStreamingBlocks = [];
+    htmlError = null;
+    render();
+
+    setTimeout(() => {
+        const msgList = document.querySelector('.messages-list');
+        if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+    }, 50);
+
+    try {
+        const res = await fetch(API_BASE + '/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Device-ID': deviceId
+            },
+            body: JSON.stringify({
+                messages: messages,
+                mode: MODE_KEYS[mode] || 'fault_finder',
+                device_id: deviceId,
+                platform: 'web'
+            })
+        });
+
+        if (!res.ok) {
+            const errText = await res.text().catch(() => 'Request failed');
+            htmlError = `HTTP ${res.status}: ${errText.substring(0, 200)}`;
+            htmlIsStreaming = false;
+            render();
+            return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let currentEvent = '';
+        let currentData = '';
+
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, {stream: true});
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    currentEvent = line.substring(7);
+                } else if (line.startsWith('data: ')) {
+                    currentData = line.substring(6);
+                } else if (line === '' && currentEvent) {
+                    try {
+                        const parsed = JSON.parse(currentData);
+                        if (currentEvent === 'block') {
+                            htmlStreamingBlocks.push(parsed);
+                            render();
+                            setTimeout(() => {
+                                const msgList = document.querySelector('.messages-list');
+                                if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+                            }, 20);
+                        } else if (currentEvent === 'status') {
+                            updatePipelineStatus(parsed.stage, parsed.detail);
+                        } else if (currentEvent === 'done') {
+                            updatePipelineStatus(null);
+                            htmlLastResponseId = parsed.response_id;
+                            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                            conv.messages.push({
+                                role: 'assistant',
+                                mode: mode,
+                                blocks: htmlStreamingBlocks,
+                                time: time
+                            });
+                            conv.count = conv.messages.length;
+                            if (conv.messages.length === 2) {
+                                conv.title = (conv.messages[0].blocks[0].content || '').substring(0, 40);
+                            }
+                            htmlStreamingBlocks = [];
+                            htmlIsStreaming = false;
+                            render();
+                            setTimeout(() => {
+                                const msgList = document.querySelector('.messages-list');
+                                if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+                            }, 50);
+                        } else if (currentEvent === 'error') {
+                            updatePipelineStatus(null);
+                            htmlError = parsed.message || 'Stream error';
+                            if (parsed.partial && htmlStreamingBlocks.length > 0) {
+                                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                                conv.messages.push({
+                                    role: 'assistant',
+                                    mode: mode,
+                                    blocks: htmlStreamingBlocks,
+                                    time: time
+                                });
+                                conv.count = conv.messages.length;
+                            }
+                            htmlStreamingBlocks = [];
+                            htmlIsStreaming = false;
+                            render();
+                        }
+                    } catch (e) { /* skip malformed JSON */ }
+                    currentEvent = '';
+                    currentData = '';
+                }
+            }
+        }
+
+        if (htmlIsStreaming) {
+            if (htmlStreamingBlocks.length > 0) {
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                conv.messages.push({
+                    role: 'assistant',
+                    mode: mode,
+                    blocks: htmlStreamingBlocks,
+                    time: time
+                });
+                conv.count = conv.messages.length;
+            }
+            htmlStreamingBlocks = [];
+            htmlIsStreaming = false;
+            render();
+        }
+    } catch (e) {
+        htmlError = e.message || 'Network error';
+        htmlStreamingBlocks = [];
+        htmlIsStreaming = false;
+        render();
+    }
+}
+
+async function apiChatVision(messages, mode, imageBase64) {
+    const deviceId = getDeviceId();
+    const conv = currentConversation >= 0 ? MOCK.conversations[currentConversation] : null;
+    if (!conv) return;
+
+    htmlIsStreaming = true;
+    htmlStreamingBlocks = [];
+    htmlError = null;
+    render();
+
+    setTimeout(() => {
+        const msgList = document.querySelector('.messages-list');
+        if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+    }, 50);
+
+    const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+    const messageText = lastUserMsg ? lastUserMsg.content : '';
+    const imageDataUri = 'data:image/jpeg;base64,' + imageBase64;
+
+    try {
+        const res = await fetch(API_BASE + '/chat/vision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Device-ID': deviceId },
+            body: JSON.stringify({
+                message: messageText,
+                image: imageDataUri,
+                mode: MODE_KEYS[mode] || 'fault_finder',
+                device_id: deviceId,
+                platform: 'web_preview'
+            })
+        });
+
+        if (!res.ok) {
+            const errText = await res.text().catch(() => 'Request failed');
+            htmlError = `HTTP ${res.status}: ${errText.substring(0, 200)}`;
+            htmlIsStreaming = false;
+            render();
+            return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let currentEvent = '';
+        let currentData = '';
+
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, {stream: true});
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+                if (line.startsWith('event: ')) { currentEvent = line.substring(7); }
+                else if (line.startsWith('data: ')) { currentData = line.substring(6); }
+                else if (line === '' && currentEvent) {
+                    try {
+                        const parsed = JSON.parse(currentData);
+                        if (currentEvent === 'block') {
+                            htmlStreamingBlocks.push(parsed);
+                            render();
+                        } else if (currentEvent === 'status') {
+                            updatePipelineStatus(parsed.stage, parsed.detail);
+                        } else if (currentEvent === 'done') {
+                            updatePipelineStatus(null);
+                            htmlLastResponseId = parsed.response_id;
+                            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                            conv.messages.push({ role: 'assistant', mode: mode, blocks: htmlStreamingBlocks, time: time });
+                            conv.count = conv.messages.length;
+                            if (conv.messages.length === 2) conv.title = (conv.messages[0].blocks[0].content || '').substring(0, 40);
+                            htmlStreamingBlocks = [];
+                            htmlIsStreaming = false;
+                            render();
+                        } else if (currentEvent === 'error') {
+                            updatePipelineStatus(null);
+                            htmlError = parsed.message || 'Stream error';
+                            if (parsed.partial && htmlStreamingBlocks.length > 0) {
+                                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                                conv.messages.push({
+                                    role: 'assistant',
+                                    mode: mode,
+                                    blocks: htmlStreamingBlocks,
+                                    time: time
+                                });
+                                conv.count = conv.messages.length;
+                            }
+                            htmlStreamingBlocks = [];
+                            htmlIsStreaming = false;
+                            render();
+                        }
+                    } catch (e) {}
+                    currentEvent = '';
+                    currentData = '';
+                }
+            }
+        }
+        if (htmlIsStreaming) { htmlStreamingBlocks = []; htmlIsStreaming = false; render(); }
+    } catch (e) {
+        htmlError = e.message || 'Network error';
+        htmlStreamingBlocks = [];
+        htmlIsStreaming = false;
+        render();
+    }
+}
+
+async function apiUploadAndChat(conv, messages, mode, file) {
+    const deviceId = getDeviceId();
+    htmlIsStreaming = true;
+    htmlStreamingBlocks = [];
+    htmlError = null;
+    render();
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        const uploadRes = await fetch(API_BASE + '/files/upload', {
+            method: 'POST',
+            headers: { 'X-Device-ID': deviceId },
+            body: formData
+        });
+        if (!uploadRes.ok) {
+            const errText = await uploadRes.text().catch(() => 'Upload failed');
+            htmlError = `Upload failed: ${errText.substring(0, 200)}`;
+            htmlIsStreaming = false;
+            render();
+            return;
+        }
+        const uploaded = await uploadRes.json();
+
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg && lastMsg.role === 'user') {
+            lastMsg.content += '\n\n[Attached file: ' + uploaded.filename + ' (id: ' + uploaded.id + ')]';
+        }
+
+        apiChat(messages, mode);
+    } catch (e) {
+        htmlError = 'File upload error: ' + (e.message || 'Network error');
+        htmlIsStreaming = false;
+        render();
+    }
+}
+
+function pickImage() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,video/*';
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        htmlAttachFileName = file.name;
+        htmlAttachType = 'image';
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            htmlAttachThumbUrl = dataUrl;
+            htmlAttachImageData = dataUrl.split(',')[1];
+            htmlAttachmentActive = true;
+            render();
+            setTimeout(toggleSendBtn, 0);
+        };
+        reader.readAsDataURL(file);
+    };
+    fileInput.click();
+}
+
+function pickDocument() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.txt,.csv,.json,.doc,.docx,.xls,.xlsx';
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        htmlAttachFileName = file.name;
+        htmlAttachType = 'document';
+        htmlAttachFileData = file;
+        htmlAttachThumbUrl = null;
+        htmlAttachImageData = null;
+        htmlAttachmentActive = true;
+        render();
+        setTimeout(toggleSendBtn, 0);
+    };
+    fileInput.click();
+}
+
+function clearAttachment() {
+    htmlAttachmentActive = false;
+    htmlAttachImageData = null;
+    htmlAttachFileName = null;
+    htmlAttachThumbUrl = null;
+    htmlAttachType = 'image';
+    htmlAttachFileData = null;
+    render();
+    setTimeout(toggleSendBtn, 0);
+}
+
+ensureDevice();
 
 function getColor(varName) {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -1032,19 +1496,132 @@ function selectMode(idx) {
 
 function dismissCard() {
     modeCardDismissed = true;
-    render();
+    const card = document.getElementById('modeCard');
+    if (card) card.classList.add('hidden');
 }
 
 function toggleSidebar(open) {
     sidebarOpen = open;
+    if (!open) htmlSidebarSearch = '';
     const overlay = document.querySelector('.sidebar-overlay');
     if (overlay) overlay.classList.toggle('visible', open);
 }
 
 function toggleSendBtn() {
     const inp = document.getElementById('msgInput');
-    const btn = document.getElementById('sendBtnEl');
-    if (inp && btn) btn.classList.toggle('visible', inp.value.trim().length > 0);
+    const sendBtn = document.getElementById('sendBtnEl');
+    const micBtn = document.getElementById('micBtnEl');
+    const hasText = inp && inp.value.trim().length > 0;
+    const showSend = hasText || htmlAttachmentActive;
+    if (sendBtn) { sendBtn.classList.toggle('visible', showSend); }
+    if (micBtn) { micBtn.style.display = showSend || htmlIsRecording ? 'none' : 'flex'; }
+}
+
+function autoGrowTextarea(el) {
+    el.style.height = 'auto';
+    const maxHeight = 5 * 22;
+    el.style.height = Math.min(el.scrollHeight, maxHeight) + 'px';
+    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+async function toggleRecording() {
+    const micBtn = document.getElementById('micBtnEl');
+    if (htmlIsRecording) {
+        htmlIsRecording = false;
+        if (htmlMediaRecorder && htmlMediaRecorder.state !== 'inactive') {
+            htmlMediaRecorder.stop();
+        }
+        if (micBtn) {
+            micBtn.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trade-green)"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0" stroke="var(--trade-green)" stroke-width="1.8" fill="none"/><line x1="12" y1="18" x2="12" y2="22" stroke="var(--trade-green)" stroke-width="1.8"/><line x1="9" y1="22" x2="15" y2="22" stroke="var(--trade-green)" stroke-width="1.8"/></svg>';
+        }
+        toggleSendBtn();
+    } else {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            htmlRecordedChunks = [];
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            htmlMediaRecorder = new MediaRecorder(stream, { mimeType });
+            htmlMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) htmlRecordedChunks.push(e.data);
+            };
+            htmlMediaRecorder.onstop = async () => {
+                stream.getTracks().forEach(t => t.stop());
+                const blob = new Blob(htmlRecordedChunks, { type: mimeType });
+                await transcribeAudioBlob(blob, mimeType);
+            };
+            htmlMediaRecorder.start();
+            htmlIsRecording = true;
+            if (micBtn) {
+                micBtn.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="14" fill="rgba(239,68,68,0.2)"/><rect x="10" y="10" width="8" height="8" rx="1" fill="#ef4444"/></svg>';
+            }
+            toggleSendBtn();
+        } catch (e) {
+            htmlError = 'Microphone access denied';
+            render();
+        }
+    }
+}
+
+async function transcribeAudioBlob(blob, mimeType) {
+    const deviceId = getDeviceId();
+    const ext = mimeType.includes('webm') ? 'webm' : 'm4a';
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.' + ext);
+    try {
+        const res = await fetch(API_BASE + '/audio/transcribe', {
+            method: 'POST',
+            headers: { 'X-Device-ID': deviceId },
+            body: formData
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.text) {
+                const inp = document.getElementById('msgInput');
+                if (inp) {
+                    inp.value = data.text;
+                    htmlInputText = data.text;
+                    autoGrowTextarea(inp);
+                    toggleSendBtn();
+                }
+            }
+        } else {
+            htmlError = 'Transcription failed';
+            render();
+        }
+    } catch (e) {
+        htmlError = 'Transcription error: ' + (e.message || 'Network error');
+        render();
+    }
+}
+
+function toggleAttachment(event) {
+    if (htmlAttachmentActive) {
+        clearAttachment();
+        return;
+    }
+    const existing = document.getElementById('attachMenu');
+    if (existing) { existing.remove(); return; }
+    const menu = document.createElement('div');
+    menu.id = 'attachMenu';
+    menu.style.cssText = 'position:absolute;bottom:100%;left:12px;background:var(--trade-bg);border:1px solid var(--trade-border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:300;overflow:hidden;min-width:160px';
+    menu.innerHTML = `
+        <button onclick="document.getElementById('attachMenu').remove();alert('Camera not available in browser preview')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:14px;color:var(--trade-text);font-family:inherit">
+            <span style="font-size:16px">&#128248;</span> Take Photo
+        </button>
+        <div style="height:1px;background:var(--trade-border)"></div>
+        <button onclick="document.getElementById('attachMenu').remove();pickImage()" style="display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:14px;color:var(--trade-text);font-family:inherit">
+            <span style="font-size:16px">&#128247;</span> Photo Library
+        </button>
+        <div style="height:1px;background:var(--trade-border)"></div>
+        <button onclick="document.getElementById('attachMenu').remove();pickDocument()" style="display:flex;align-items:center;gap:8px;padding:10px 14px;width:100%;border:none;background:none;cursor:pointer;font-size:14px;color:var(--trade-text);font-family:inherit">
+            <span style="font-size:16px">&#128196;</span> Browse Files
+        </button>`;
+    const btn = event?.target?.closest('.add-btn') || event?.target;
+    if (btn) btn.parentElement.style.position = 'relative';
+    (btn ? btn.parentElement : document.body).appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function dismiss(e) {
+        if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', dismiss); }
+    }), 0);
 }
 
 // Renderers
@@ -1075,15 +1652,27 @@ function htmlModeSelector(activeIdx) {
 }
 
 function htmlInputBar() {
+    let thumbHtml = '';
+    if (htmlAttachmentActive && htmlAttachType === 'image' && htmlAttachThumbUrl) {
+        thumbHtml = `<div style="padding:4px 12px 0"><div style="width:40px;height:40px;border-radius:8px;overflow:hidden;position:relative"><img src="${htmlAttachThumbUrl}" style="width:40px;height:40px;object-fit:cover"><button onclick="clearAttachment()" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--trade-text-secondary);color:var(--trade-bg);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">&times;</button></div></div>`;
+    } else if (htmlAttachmentActive && htmlAttachType === 'document') {
+        thumbHtml = `<div style="padding:4px 12px 0"><div style="width:auto;min-width:40px;height:40px;border-radius:8px;background:var(--trade-input);border:1px solid var(--trade-border);display:flex;align-items:center;justify-content:center;gap:4px;padding:0 8px;position:relative"><span style="font-size:16px;color:var(--trade-text-secondary)">&#128196;</span><span style="font-size:10px;color:var(--trade-text-secondary);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(htmlAttachFileName||'File')}</span><button onclick="clearAttachment()" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--trade-text-secondary);color:var(--trade-bg);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">&times;</button></div></div>`;
+    } else if (htmlAttachmentActive) {
+        thumbHtml = `<div style="padding:4px 12px 0"><div style="width:40px;height:40px;border-radius:8px;background:var(--trade-input);border:1px solid var(--trade-border);display:flex;align-items:center;justify-content:center;position:relative"><span style="font-size:20px;color:var(--trade-text-secondary)">&#128247;</span><button onclick="clearAttachment()" style="position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--trade-text-secondary);color:var(--trade-bg);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">&times;</button></div></div>`;
+    }
     return `<div class="input-area">
         ${htmlModeSelector(currentMode)}
+        ${thumbHtml}
         <div class="input-row">
-            <button class="add-btn">+</button>
+            <button class="add-btn" onclick="toggleAttachment(event)"><span style="display:inline-block;transition:transform 0.2s;${htmlAttachmentActive ? 'transform:rotate(45deg)' : ''}">+</span></button>
             <div class="text-input-wrap">
-                <input class="text-input" type="text" placeholder="Ask TradeGuru" id="msgInput" oninput="toggleSendBtn(); dismissCard()" onfocus="dismissCard()">
+                <textarea class="text-input" placeholder="Ask TradeGuru" id="msgInput" rows="1" oninput="htmlInputText=this.value; autoGrowTextarea(this); toggleSendBtn(); dismissCard()" onfocus="dismissCard()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}" style="resize:none;overflow:hidden"></textarea>
             </div>
-            <button class="send-btn" id="sendBtnEl">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="var(--trade-green)"><circle cx="14" cy="14" r="14"/><path d="M14 7l-1 0 0 6-6 0 0 2 6 0 0 6 2 0 0-6 6 0 0-2-6 0 0-6z" fill="var(--trade-bg)" transform="rotate(45 14 14)"/></svg>
+            <button class="send-btn" id="sendBtnEl" onclick="sendMessage()">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="var(--trade-green)"><circle cx="14" cy="14" r="14"/><path d="M14 8l-5 5 1.4 1.4L13 11.8V20h2v-8.2l2.6 2.6L19 13z" fill="var(--trade-bg)"/></svg>
+            </button>
+            <button class="send-btn" id="micBtnEl" style="opacity:1;transform:scale(1);pointer-events:auto" onclick="toggleRecording()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--trade-green)"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0" stroke="var(--trade-green)" stroke-width="1.8" fill="none"/><line x1="12" y1="18" x2="12" y2="22" stroke="var(--trade-green)" stroke-width="1.8"/><line x1="9" y1="22" x2="15" y2="22" stroke="var(--trade-green)" stroke-width="1.8"/></svg>
             </button>
         </div>
     </div>`;
@@ -1094,13 +1683,31 @@ function htmlNavBar() {
         <button class="nav-icon-btn" onclick="toggleSidebar(true)">
             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="19" y2="1"/><line x1="1" y1="7" x2="19" y2="7"/><line x1="1" y1="13" x2="19" y2="13"/></svg>
         </button>
-        <button class="nav-icon-btn">
+        <button class="nav-icon-btn" onclick="setComponent('settings')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="nav-icon-btn" onclick="newChat()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
     </div>`;
 }
 
+function htmlPipelineStatus() {
+    return `<div class="pipeline-status hidden" id="pipelineStatus">
+        <span class="pipeline-status-icon" id="pipelineIcon"></span>
+        <span class="pipeline-status-text" id="pipelineText"></span>
+        <span class="pipeline-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </span>
+    </div>`;
+}
+
 function htmlSidebar() {
+    const filtered = MOCK.conversations.filter(c =>
+        !htmlSidebarSearch || c.title.toLowerCase().includes(htmlSidebarSearch.toLowerCase())
+    );
     return `<div class="sidebar-overlay${sidebarOpen?' visible':''}">
         <div class="sidebar-dim" onclick="toggleSidebar(false)"></div>
         <div class="sidebar-panel">
@@ -1108,22 +1715,33 @@ function htmlSidebar() {
                 <span class="sidebar-title">Conversations</span>
                 <button class="sidebar-close" onclick="toggleSidebar(false)">&times;</button>
             </div>
+            <div style="padding:8px 16px">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--trade-input);border-radius:10px">
+                    <span style="font-size:14px;color:var(--trade-text-secondary)">&#128269;</span>
+                    <input type="text" placeholder="Search conversations" value="${esc(htmlSidebarSearch)}"
+                        oninput="htmlSidebarSearch=this.value;render()"
+                        style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--trade-text);font-family:inherit">
+                    ${htmlSidebarSearch ? `<button onclick="htmlSidebarSearch='';render()" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--trade-text-secondary)">&times;</button>` : ''}
+                </div>
+            </div>
             <div class="sidebar-list">
-                ${MOCK.conversations.map(c => {
+                ${filtered.map((c, ci) => {
+                    const realIndex = MOCK.conversations.indexOf(c);
                     const m = MODES[c.mode];
                     const mc = getColor(m.color);
-                    return `<button class="sidebar-row" onclick="toggleSidebar(false)">
+                    return `<div class="sidebar-row" style="display:flex;align-items:center" onclick="selectConversation(${realIndex})">
                         <span class="sidebar-row-icon" style="color:${mc}">${m.icon}</span>
-                        <div>
-                            <div class="sidebar-row-title">${c.title}</div>
+                        <div style="flex:1;min-width:0">
+                            <div class="sidebar-row-title">${esc(c.title)}</div>
                             <div class="sidebar-row-meta">${c.date}</div>
-                            <div class="sidebar-row-meta">${c.count} messages</div>
+                            <div class="sidebar-row-meta">${c.messages.length} messages</div>
                         </div>
-                    </button>`;
+                        <button onclick="event.stopPropagation();deleteConversation(${realIndex})" title="Delete" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--trade-text-secondary);font-size:14px;flex-shrink:0;border-radius:6px" onmouseover="this.style.color='#ef4444';this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='var(--trade-text-secondary)';this.style.background='none'">&#128465;</button>
+                    </div>`;
                 }).join('')}
             </div>
             <div class="sidebar-footer">
-                <button class="sidebar-new-btn" onclick="toggleSidebar(false)">New Conversation</button>
+                <button class="sidebar-new-btn" onclick="newChat()">New Conversation</button>
             </div>
         </div>
     </div>`;
@@ -1137,27 +1755,37 @@ function htmlBlock(block) {
             const hl = block.level || 2;
             return `<div class="block-heading h${hl}">${esc(block.content)}</div>`;
         case 'stepList':
+        case 'step_list':
             return `<div class="block-step-list">
                 ${block.title?`<div class="step-title">${esc(block.title)}</div>`:''}
                 ${(block.steps||[]).map((s,i) => `<div class="step-item">
-                    <div class="step-num">${i+1}</div>
-                    <div class="step-text">${esc(s)}</div>
+                    <div class="step-num">${s.step_number || (i+1)}</div>
+                    <div class="step-body">
+                        ${s.title ? `<div class="step-title-text" style="font-weight:600;margin-bottom:4px">${esc(s.title)}</div>` : ''}
+                        <div class="step-text">${esc(typeof s === 'string' ? s : (s.description || s.content || ''))}</div>
+                        ${s.safety_note ? `<div style="margin-top:4px;font-size:12px;color:var(--mode-fault-finder)">&#9888;&#65039; ${esc(s.safety_note)}</div>` : ''}
+                    </div>
                 </div>`).join('')}
             </div>`;
         case 'warning':
-            const isDanger = (block.content||'').toLowerCase().includes('danger');
             return `<div class="block-warning">
                 <span class="warning-icon">\u26A0\uFE0F</span>
                 <div class="warning-body">
-                    <div class="warning-title">${isDanger?'Danger':'Warning'}</div>
+                    <div class="warning-title">Warning</div>
                     <div class="warning-text">${esc(block.content)}</div>
                 </div>
             </div>`;
         case 'code':
-            return `<div class="block-code">${block.language?`<span class="code-lang">${esc(block.language)}</span>`:''}${esc(block.content)}</div>`;
+            return `<div class="block-code" style="position:relative">
+                <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:4px">
+                    ${block.language?`<span style="font-size:11px;color:var(--trade-text-secondary);font-family:-apple-system,sans-serif">${esc(block.language)}</span>`:''}
+                    <button onclick="navigator.clipboard.writeText(this.closest('.block-code').querySelector('.code-content').textContent);const b=this;b.innerHTML='<span style=\\'font-size:11px;color:var(--trade-green);font-family:-apple-system,sans-serif\\'>Copied</span>';setTimeout(()=>{b.innerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'var(--trade-text-secondary)\\' stroke-width=\\'2\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\'/><path d=\\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\\'/></svg>'},1500)" style="background:none;border:none;cursor:pointer;padding:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--trade-text-secondary)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                </div>
+                <div style="overflow-x:auto"><span class="code-content">${esc(block.content)}</span></div></div>`;
         case 'partsList':
+        case 'parts_list':
             return `<div class="block-parts">
-                <div class="parts-header"><span>Item</span><span>Spec</span><span>Qty</span></div>
+                <div class="parts-header"><span>Item</span><span>Specification</span><span>Qty</span></div>
                 ${(block.items||[]).map(p => `<div class="parts-row"><span>${esc(p.name)}</span><span>${esc(p.spec)}</span><span>${p.qty}</span></div>`).join('')}
             </div>`;
         case 'regulation':
@@ -1186,12 +1814,26 @@ function htmlBlock(block) {
             return `<div style="padding:12px; background:var(--trade-surface); border-radius:12px; font-style:italic; color:var(--trade-text-secondary)">\u2699\uFE0F Tool: ${esc(block.content || block.title || 'Processing...')}</div>`;
         case 'link':
             return `<div style="padding:8px 0"><a href="${block.url || '#'}" style="color:var(--mode-learn); text-decoration:underline; font-size:14px">${esc(block.content || block.title || block.url || 'Link')}</a></div>`;
+        case 'tip':
+            const tipCat = block.category || 'best_practice';
+            const tipIcons = {safety:'\u{1F6E1}\uFE0F',efficiency:'\u26A1',best_practice:'\u{1F4A1}',troubleshooting:'\u{1F527}'};
+            return `<div class="block-callout callout-border-tip" style="border-left:3px solid var(--mode-learn);padding:12px;background:var(--trade-surface);border-radius:12px;display:flex;gap:8px;align-items:flex-start">
+                <span style="font-size:16px">${tipIcons[tipCat]||'\u{1F4A1}'}</span>
+                <div style="font-size:14px;color:var(--trade-text)">${esc(block.content)}</div>
+            </div>`;
+        case 'reference':
+            return `<div class="block-regulation" style="border-left:3px solid var(--mode-research);padding:12px;background:var(--trade-surface);border-radius:12px">
+                <div style="font-size:13px;font-weight:600;color:var(--mode-research)">${esc(block.source || block.standard || 'Reference')}</div>
+                ${block.section ? `<div style="font-size:12px;color:var(--trade-text-secondary);margin-top:2px">Section ${esc(block.section)}</div>` : ''}
+                ${block.description ? `<div style="font-size:13px;color:var(--trade-text);margin-top:4px">${esc(block.description)}</div>` : ''}
+                ${block.url ? `<a href="${block.url}" style="font-size:12px;color:var(--mode-learn);margin-top:4px;display:inline-block">View source</a>` : ''}
+            </div>`;
         default:
             return `<div class="block-text" style="font-style:italic;color:var(--trade-text-secondary)">${esc(block.type)}: ${esc(block.content||'')}</div>`;
     }
 }
 
-function htmlMessage(msg) {
+function htmlMessage(msg, isLastAssistant) {
     if (msg.role === 'user') {
         const txt = msg.blocks.map(b=>b.content||'').join('\n');
         return `<div class="msg-row user">
@@ -1201,12 +1843,18 @@ function htmlMessage(msg) {
     } else {
         const m = MODES[msg.mode || 0];
         const mc = getColor(m.color);
+        const ratingRow = isLastAssistant ? `<div style="display:flex;gap:8px;align-items:center;margin-top:4px" id="ratingRow">
+            ${[1,2,3,4,5].map(n => `<span class="rate-star" data-star="${n}" style="cursor:pointer;font-size:14px;color:var(--trade-text-secondary)" onclick="rateStars(${n})">&starf;</span>`).join('')}
+            <span style="cursor:pointer;font-size:14px;color:var(--trade-text-secondary)" title="Flag" onclick="this.style.color='var(--trade-green)';this.textContent='Flagged';apiFlag('inappropriate')">&flag;</span>
+            <span style="cursor:pointer;font-size:14px;color:var(--trade-text-secondary)" title="Listen" onclick="apiSpeak(this)">&#128264;</span>
+        </div>` : '';
         return `<div class="msg-row assistant">
             <div class="msg-bubble-assistant">${msg.blocks.map(htmlBlock).join('')}</div>
             <div class="msg-meta">
                 <span class="msg-meta-icon" style="color:${mc}">${m.icon}</span>
                 <span class="msg-meta-time">${msg.time}</span>
             </div>
+            ${ratingRow}
         </div>`;
     }
 }
@@ -1216,15 +1864,112 @@ function esc(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
+function rateStars(n) {
+    document.querySelectorAll('.rate-star').forEach(s => {
+        const star = parseInt(s.dataset.star);
+        s.style.color = star <= n ? 'var(--trade-green)' : 'var(--trade-text-secondary)';
+    });
+    apiRate(n);
+}
+
+async function apiRate(stars) {
+    if (mockMode || !htmlLastResponseId) return;
+    try {
+        await fetch(API_BASE + '/rating', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Device-ID': getDeviceId() },
+            body: JSON.stringify({
+                response_id: htmlLastResponseId,
+                stars: stars,
+                mode: MODE_KEYS[currentMode] || 'fault_finder'
+            })
+        });
+    } catch (e) { /* silent */ }
+}
+
+async function apiFlag(reason) {
+    if (mockMode || !htmlLastResponseId) return;
+    try {
+        await fetch(API_BASE + '/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Device-ID': getDeviceId() },
+            body: JSON.stringify({
+                response_id: htmlLastResponseId,
+                reason: reason,
+                mode: MODE_KEYS[currentMode] || 'fault_finder'
+            })
+        });
+    } catch (e) { /* silent */ }
+}
+
+async function apiSpeak(el) {
+    if (mockMode) return;
+    const conv = currentConversation >= 0 ? MOCK.conversations[currentConversation] : null;
+    if (!conv) return;
+    const lastAssistant = [...conv.messages].reverse().find(m => m.role === 'assistant');
+    if (!lastAssistant) return;
+    const text = lastAssistant.blocks.map(b => b.content || '').join('\n');
+    if (!text) return;
+    el.style.color = 'var(--trade-green)';
+    el.textContent = '\u23F3';
+    try {
+        const res = await fetch(API_BASE + '/audio/speech', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Device-ID': getDeviceId() },
+            body: JSON.stringify({ text: text.substring(0, 4096), voice: 'nova' })
+        });
+        if (res.ok) {
+            const audioBlob = await res.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+            el.textContent = '\uD83D\uDD0A';
+            audio.onended = () => { el.textContent = '\uD83D\uDD08'; URL.revokeObjectURL(audioUrl); };
+        } else {
+            el.textContent = '\uD83D\uDD08';
+            el.style.color = 'var(--trade-text-secondary)';
+        }
+    } catch (e) {
+        el.textContent = '\uD83D\uDD08';
+        el.style.color = 'var(--trade-text-secondary)';
+    }
+}
+
 function renderFullChat() {
-    const conv = MOCK.conversations[0];
+    const conv = currentConversation >= 0 && currentConversation < MOCK.conversations.length
+        ? MOCK.conversations[currentConversation]
+        : null;
+    if (!conv || conv.messages.length === 0) {
+        return `${htmlNavBar()}
+            ${htmlPipelineStatus()}
+            ${htmlModeCard(currentMode)}
+            <div class="chat-content">
+                <div class="empty-state"><div class="watermark-logo" style="background:url('${LOGO_URL}') center/contain no-repeat"></div></div>
+            </div>
+            ${htmlInputBar()}
+            ${htmlSidebar()}`;
+    }
+    const lastAssistantIdx = (() => { for (let i = conv.messages.length - 1; i >= 0; i--) { if (conv.messages[i].role === 'assistant') return i; } return -1; })();
     return `${htmlNavBar()}
+        ${htmlPipelineStatus()}
         ${htmlModeCard(currentMode)}
         <div class="chat-content">
             <div class="messages-list">
-                ${conv.messages.map(htmlMessage).join('')}
+                ${conv.messages.map((m, i) => htmlMessage(m, i === lastAssistantIdx)).join('')}
+                ${htmlIsStreaming && htmlStreamingBlocks.length > 0 ? `<div class="msg-row assistant"><div class="msg-bubble-assistant">${htmlStreamingBlocks.map(htmlBlock).join('')}</div></div>` : ''}
+                ${htmlIsStreaming && htmlStreamingBlocks.length === 0 ? `<div class="msg-row assistant"><div style="padding:14px;background:var(--trade-surface);border-radius:16px;display:flex;gap:6px;max-width:80px">
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--trade-text-secondary);animation:pulseDot 1.2s ease-in-out infinite">&#8203;</span>
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--trade-text-secondary);animation:pulseDot 1.2s ease-in-out infinite 0.2s">&#8203;</span>
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--trade-text-secondary);animation:pulseDot 1.2s ease-in-out infinite 0.4s">&#8203;</span>
+                </div></div>` : ''}
             </div>
         </div>
+        ${htmlError ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(239,68,68,0.1)">
+            <span style="color:#ef4444;font-size:14px">&#9888;</span>
+            <span style="flex:1;color:#ef4444;font-size:13px">${esc(htmlError)}</span>
+            <button onclick="retryLastMessage()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;font-weight:600;height:44px">Retry</button>
+            <button onclick="htmlError=null;render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;font-weight:600;width:44px;height:44px">&times;</button>
+        </div>` : ''}
         ${htmlInputBar()}
         ${htmlSidebar()}`;
 }
@@ -1233,9 +1978,252 @@ function renderIsolated(html) {
     return `${htmlNavBar()}<div class="isolated-component"><div style="width:100%">${html}</div></div>`;
 }
 
+function setOnboardingPage(n) {
+    htmlOnboardingPage = Math.max(0, Math.min(n, 3));
+    render();
+}
+
+function renderOnboarding() {
+    const isWatch = currentDevice === 'watch';
+    const page = htmlOnboardingPage;
+    const circleSize = isWatch ? 60 : 120;
+    const iconScale = isWatch ? 30 : 60;
+    const titleSize = isWatch ? 14 : 28;
+    const bodySize = isWatch ? 10 : 16;
+    const dotSize = isWatch ? 6 : 8;
+    const activeDotW = isWatch ? 16 : 24;
+    const skipSize = isWatch ? 10 : 14;
+    const btnHeight = isWatch ? 30 : 50;
+    const btnFontSize = isWatch ? 12 : 17;
+    const logoSize = isWatch ? 60 : 160;
+    const spacing1 = isWatch ? 16 : 32;
+    const spacing2 = isWatch ? 6 : 12;
+    const hPad = isWatch ? 20 : 40;
+
+    let content = '';
+
+    if (page < 3) {
+        const mode = MODES[page];
+        const modeColor = `var(${mode.color})`;
+        const modeBg = `var(${mode.bg})`;
+        const scaledSvg = mode.iconSvg.replace(/width="16" height="16"/, `width="${iconScale}" height="${iconScale}"`).replace(/fill="white"/, `fill="${modeColor}"`);
+
+        content = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;background:var(--trade-bg);position:relative"
+             ontouchstart="this._touchX=event.touches[0].clientX"
+             ontouchend="(function(el,e){var dx=e.changedTouches[0].clientX-el._touchX;if(dx<-50&&${page}<3)setOnboardingPage(${page+1});if(dx>50&&${page}>0)setOnboardingPage(${page-1});})(this,event)">
+            <div style="position:absolute;top:${isWatch?4:8}px;right:${isWatch?8:20}px">
+                <button onclick="currentComponent='full-chat';render()" style="background:none;border:none;color:var(--trade-text-secondary);font-size:${skipSize}px;cursor:pointer;padding:4px 8px">Skip</button>
+            </div>
+            <div style="width:${circleSize}px;height:${circleSize}px;border-radius:50%;background:${modeBg};display:flex;align-items:center;justify-content:center">
+                ${scaledSvg}
+            </div>
+            <div style="font-size:${titleSize}px;font-weight:bold;color:var(--trade-text);margin-top:${spacing1}px">${mode.name}</div>
+            <div style="font-size:${bodySize}px;color:var(--trade-text-secondary);text-align:center;max-width:300px;margin-top:${spacing2}px;padding:0 ${hPad}px">${mode.fullDesc}</div>
+        </div>`;
+    } else {
+        content = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;background:var(--trade-bg);position:relative"
+             ontouchstart="this._touchX=event.touches[0].clientX"
+             ontouchend="(function(el,e){var dx=e.changedTouches[0].clientX-el._touchX;if(dx>50&&${page}>0)setOnboardingPage(${page-1});})(this,event)">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="position:relative;width:${logoSize}px;height:${logoSize}px">
+                    ${isDark ? '' : `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${Math.round(logoSize*0.7)}px;height:${Math.round(logoSize*0.7)}px;border-radius:50%;background:#242026"></div>`}
+                    <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:url('${LOGO_URL}') center/contain no-repeat"></div>
+                </div>
+                <div style="font-size:${titleSize}px;font-weight:bold;color:var(--trade-text);margin-top:${spacing1}px">Ready to start?</div>
+                <div style="font-size:${bodySize}px;color:var(--trade-text-secondary);text-align:center;max-width:300px;margin-top:${spacing2}px;padding:0 ${hPad}px">Your AI-powered electrical assistant. Ask anything about wiring, faults, standards, or theory.</div>
+            </div>
+            <div style="width:100%;padding:0 ${hPad}px;margin-bottom:${spacing2}px">
+                <button onclick="currentComponent='full-chat';render()" style="width:100%;height:${btnHeight}px;background:var(--trade-green);color:white;border:none;border-radius:14px;font-size:${btnFontSize}px;font-weight:600;cursor:pointer">Get Started</button>
+            </div>
+            <button onclick="currentComponent='full-chat';render()" style="background:none;border:none;color:var(--trade-text-secondary);font-size:${skipSize}px;cursor:pointer;padding:4px;margin-bottom:${isWatch?8:16}px">Already have an account? Sign In</button>
+        </div>`;
+    }
+
+    const dots = [0,1,2,3].map(i => {
+        if (i === page) {
+            return `<div onclick="setOnboardingPage(${i})" style="width:${activeDotW}px;height:${dotSize}px;border-radius:4px;background:var(--trade-green);cursor:pointer"></div>`;
+        }
+        return `<div onclick="setOnboardingPage(${i})" style="width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:var(--trade-text-secondary);opacity:0.4;cursor:pointer"></div>`;
+    }).join('');
+
+    return `<div style="display:flex;flex-direction:column;height:100%;background:var(--trade-bg)">
+        <div style="flex:1;overflow:hidden">${content}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:${isWatch?4:8}px;padding:${isWatch?6:16}px 0">${dots}</div>
+    </div>`;
+}
+
+let htmlDisclaimerScrolled = false;
+
+function renderDisclaimer() {
+    const isWatch = currentDevice === 'watch';
+    const fs = isWatch ? 0.7 : 1;
+    const sections = [
+        { num: '1', title: 'Not Professional Advice', body: 'TradeGuru does not constitute legal, regulatory, compliance, electrical, safety, or professional advice of any kind. The information provided by this application is generated by artificial intelligence and should be treated as a starting point for your own research and verification only.', group: 'what' },
+        { num: '2', title: 'Not a Substitute for Professional Judgment', body: 'TradeGuru must not be relied upon as a substitute for professional judgment, qualified electrical advice, or compliance with applicable Australian Standards (including AS/NZS 3000:2018 Wiring Rules), regulations, state-specific requirements, or industry codes of practice.', group: 'what' },
+        { num: '3', title: 'Verification Required', body: 'You are solely responsible for verifying all information, diagnoses, fault-finding suggestions, and recommendations provided by TradeGuru before taking any action. Always cross-reference with current standards, manufacturer specifications, and local regulatory requirements.', group: 'what' },
+        { num: '4', title: 'No Responsibility for Outcomes', body: 'Trade Guru Pty Ltd accepts no responsibility for any decisions made, actions taken, or work performed based on the application\'s outputs. All electrical work must be performed by appropriately licensed personnel in accordance with applicable laws and regulations.', group: 'responsibility' },
+        { num: '5', title: 'Professional Judgment Required', body: 'You must always exercise independent professional judgment and comply with all applicable laws, regulations, and safety requirements when performing electrical work. If in doubt, consult a qualified electrical engineer or inspector.', group: 'responsibility' },
+        { num: '6', title: 'Inherent Risks', body: 'Electrical work is inherently dangerous. Reliance on AI-generated information without proper professional verification could result in property damage, personal injury, or death. You assume all risks associated with the use of this application.', group: 'risk' }
+    ];
+    const amber = getColor('--mode-fault-finder');
+    const dangerRed = '#D32F2F';
+    const sectionHtml = sections.map((s, i) => {
+        const isRisk = s.group === 'risk';
+        const isResponsibility = s.group === 'responsibility';
+        const badgeColor = isRisk ? dangerRed : amber;
+        const titleColor = isRisk ? dangerRed : 'var(--trade-text)';
+        const titleSize = isRisk ? 19 : 17;
+        const titleWeight = isRisk ? '700' : (isResponsibility ? '700' : '600');
+        const dividerBefore = (s.num === '4') ? `<div style="height:1px;background:var(--trade-border);margin:${4*fs}px 0 ${28*fs}px 0"></div>` : '';
+        const wrapStart = isRisk ? `<div style="background:rgba(211,47,47,0.08);border-radius:${12*fs}px;padding:${16*fs}px;margin-bottom:${28*fs}px">` : '';
+        const wrapEnd = isRisk ? '</div>' : '';
+        const marginBottom = isRisk ? '' : `margin-bottom:${28*fs}px;`;
+        return `${dividerBefore}${wrapStart}<div style="${marginBottom}opacity:0;transform:translateY(12px);animation:disclaimerFadeIn 0.4s ease forwards;animation-delay:${(i*0.08).toFixed(2)}s">
+                <div style="display:flex;align-items:center;gap:${10*fs}px;margin-bottom:${8*fs}px">
+                    <span style="width:${24*fs}px;height:${24*fs}px;border-radius:${7*fs}px;background:${badgeColor};color:#fff;font-size:${14*fs}px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.num}</span>
+                    <span style="font-size:${titleSize*fs}px;font-weight:${titleWeight};color:${titleColor}">${s.title}</span>
+                </div>
+                <div style="font-size:${15*fs}px;color:var(--trade-text-secondary);line-height:1.6;padding-left:${34*fs}px">${s.body}</div>
+            </div>${wrapEnd}`;
+    }).join('');
+    return `<div style="flex:1;display:flex;flex-direction:column;background:var(--trade-bg);overflow:hidden">
+        <style>@keyframes disclaimerFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}</style>
+        <div style="text-align:center;padding:${isWatch?'8px':'32px'} ${isWatch?'8px':'24px'} ${isWatch?'8px':'20px'}">
+            <div style="font-size:${60*fs}px;color:${amber};margin-bottom:${8*fs}px;filter:drop-shadow(0 0 12px rgba(${parseInt(amber.slice(1,3),16)},${parseInt(amber.slice(3,5),16)},${parseInt(amber.slice(5,7),16)},0.4))">&#9888;&#65039;</div>
+            <div style="font-size:${34*fs}px;font-weight:700;color:var(--trade-text);letter-spacing:-0.5px">Important Safety Notice</div>
+            <div style="font-size:${14*fs}px;color:var(--trade-text-secondary);margin-top:4px">Please read carefully before using TradeGuru</div>
+        </div>
+        <div id="disclaimerScroll" style="flex:1;overflow-y:auto;padding:0 ${isWatch?'8px':'24px'}" onscroll="checkDisclaimerScroll()">
+            ${sectionHtml}
+            <div style="height:1px" id="disclaimerBottom"></div>
+        </div>
+        <div style="border-top:1px solid var(--trade-border);padding:${isWatch?'6px':'12px'} ${isWatch?'8px':'24px'} ${isWatch?'8px':'16px'};text-align:center">
+            ${!htmlDisclaimerScrolled ? `<div style="display:flex;align-items:center;justify-content:center;gap:6px;color:var(--trade-text-secondary);font-size:${13*fs}px;margin-bottom:8px">
+                <span style="font-size:${12*fs}px">&#8595;</span> Scroll to read all terms
+            </div>` : ''}
+            <button onclick="htmlDisclaimerScrolled=false;setComponent('full-chat')" style="width:100%;padding:${isWatch?'8px':'18px'};background:${htmlDisclaimerScrolled?'var(--trade-green)':'var(--trade-text-secondary)'};color:#fff;border:none;border-radius:14px;font-size:${17*fs}px;font-weight:600;cursor:${htmlDisclaimerScrolled?'pointer':'not-allowed'};font-family:inherit;opacity:${htmlDisclaimerScrolled?'1':'0.6'};transition:background 0.3s ease,opacity 0.3s ease" ${htmlDisclaimerScrolled?'':'disabled'}>I Understand and Agree</button>
+            <div style="font-size:${12*fs}px;color:var(--trade-text-secondary);margin-top:${8*fs}px">By continuing, you confirm you are a licensed electrical professional</div>
+        </div>
+    </div>`;
+}
+
+function checkDisclaimerScroll() {
+    const el = document.getElementById('disclaimerScroll');
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
+        if (!htmlDisclaimerScrolled) {
+            htmlDisclaimerScrolled = true;
+            render();
+        }
+    }
+}
+
+function renderSettings() {
+    const isWatch = currentDevice === 'watch';
+    const fs = isWatch ? 0.7 : 1;
+
+    const headerStyle = `display:flex;align-items:center;justify-content:space-between;padding:${isWatch?'6px 8px':'12px 16px'};background:var(--trade-bg);border-bottom:0.5px solid var(--trade-border)`;
+    const sectionHeaderStyle = `font-size:${12*fs}px;font-weight:600;color:var(--trade-text-secondary);text-transform:uppercase;padding:${isWatch?'8px 8px 4px':'24px 16px 8px'}`;
+    const rowStyle = `padding:${isWatch?'6px 8px':'12px 16px'};background:var(--trade-surface);border-bottom:0.5px solid var(--trade-border)`;
+    const firstRowStyle = rowStyle + `;border-top-left-radius:10px;border-top-right-radius:10px`;
+    const lastRowStyle = `padding:${isWatch?'6px 8px':'12px 16px'};background:var(--trade-surface);border-bottom-left-radius:10px;border-bottom-right-radius:10px`;
+    const singleRowStyle = `padding:${isWatch?'6px 8px':'12px 16px'};background:var(--trade-surface);border-radius:10px`;
+
+    let accountRows = '';
+    if (htmlSettingsSignedIn) {
+        accountRows = `
+            <div style="${firstRowStyle}">
+                <div style="display:flex;align-items:center;gap:${isWatch?6:12}px;padding:${isWatch?2:4}px 0">
+                    <div style="width:${isWatch?36:60}px;height:${isWatch?36:60}px;border-radius:50%;background:var(--trade-text-secondary);opacity:0.3;flex-shrink:0"></div>
+                    <div style="display:flex;flex-direction:column;gap:${isWatch?2:4}px">
+                        <span style="font-size:${17*fs}px;font-weight:600;color:var(--trade-text)">Test User</span>
+                        <span style="font-size:${14*fs}px;color:var(--trade-text-secondary)">test@example.com</span>
+                        <span style="font-size:${12*fs}px;font-weight:600;color:var(--mode-learn);background:rgba(59,130,246,0.15);padding:${isWatch?'2px 6px':'4px 10px'};border-radius:8px;display:inline-block;width:fit-content">Pro</span>
+                    </div>
+                </div>
+            </div>
+            <div style="${lastRowStyle}">
+                <button onclick="htmlSettingsSignedIn=false;render()" style="background:none;border:none;cursor:pointer;font-size:${17*fs}px;color:#FF3B30;font-family:inherit;padding:0;text-align:left;width:100%">Sign Out</button>
+            </div>`;
+    } else {
+        accountRows = `
+            <div style="${firstRowStyle}">
+                <div style="display:flex;flex-direction:column;gap:${isWatch?4:8}px;padding:${isWatch?2:4}px 0">
+                    <span style="font-size:${15*fs}px;color:var(--trade-text)">Sign In to TradeGuru</span>
+                    <span style="font-size:${13*fs}px;color:var(--trade-text-secondary)">Access Pro features and sync across devices</span>
+                </div>
+            </div>
+            <div style="${lastRowStyle}">
+                <button onclick="htmlSettingsSignedIn=true;render()" style="background:none;border:none;cursor:pointer;font-size:${17*fs}px;color:var(--trade-green);font-family:inherit;padding:0;text-align:left;width:100%">Sign In</button>
+            </div>`;
+    }
+
+    return `<div style="display:flex;flex-direction:column;height:100%;background:var(--trade-bg)">
+        <div style="${headerStyle}">
+            <div style="width:44px"></div>
+            <span style="font-size:${17*fs}px;font-weight:600;color:var(--trade-text)">Settings</span>
+            <button onclick="setComponent('full-chat')" style="background:none;border:none;cursor:pointer;width:${isWatch?28:44}px;height:${isWatch?28:44}px;display:flex;align-items:center;justify-content:center">
+                <svg width="${isWatch?10:14}" height="${isWatch?10:14}" viewBox="0 0 14 14" fill="none" stroke="var(--trade-text-secondary)" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+            </button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:0 ${isWatch?4:16}px ${isWatch?8:24}px">
+            <div style="${sectionHeaderStyle}">Account</div>
+            <div style="margin:0 0 0 0">
+                ${accountRows}
+            </div>
+            <div style="${sectionHeaderStyle}">Data</div>
+            <div style="margin:0 0 0 0">
+                <div style="${singleRowStyle}">
+                    <button style="background:none;border:none;cursor:pointer;font-size:${17*fs}px;color:#FF3B30;font-family:inherit;padding:0;text-align:left;width:100%">Clear All Conversations</button>
+                </div>
+            </div>
+            <div style="${sectionHeaderStyle}">About</div>
+            <div style="margin:0 0 0 0">
+                <div style="${firstRowStyle}">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <span style="font-size:${17*fs}px;color:var(--trade-text)">TradeGuru Electrical</span>
+                        <span style="font-size:${17*fs}px;color:var(--trade-text-secondary)">Version 1.0.0</span>
+                    </div>
+                </div>
+                <div style="${rowStyle}">
+                    <a href="#" style="font-size:${17*fs}px;color:var(--mode-learn);text-decoration:none">Terms of Service</a>
+                </div>
+                <div style="${lastRowStyle}">
+                    <a href="#" style="font-size:${17*fs}px;color:var(--mode-learn);text-decoration:none">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderCamera() {
+    return `<div style="position:relative;width:100%;height:100%;background:#000;display:flex;flex-direction:column;overflow:hidden">
+        <div style="position:absolute;top:16px;right:16px;z-index:10">
+            <button onclick="document.getElementById('componentSelect').value='full-chat';currentComponent='full-chat';render()" style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;font-weight:600">&times;</button>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center">
+            <div style="width:280px;height:380px;border:2px solid rgba(255,255,255,0.2);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="12" width="40" height="28" rx="4" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/><circle cx="24" cy="26" r="8" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/><path d="M16 12l2-4h12l2 4" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/></svg>
+                <span style="color:rgba(255,255,255,0.5);font-size:14px;font-family:-apple-system,system-ui,sans-serif;text-align:center;padding:0 20px">Camera preview not available in browser</span>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 32px 40px 32px">
+            <button style="width:44px;height:44px;background:none;border:none;cursor:pointer;font-size:22px;color:#fff">&#9889;</button>
+            <button style="width:70px;height:70px;border-radius:50%;border:none;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+                <div style="width:64px;height:64px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,0.2)"></div>
+            </button>
+            <div style="width:44px;height:44px"></div>
+        </div>
+    </div>`;
+}
+
 function render() {
     const sc = document.getElementById('screenContent');
     const isWatch = currentDevice === 'watch';
+    const prevInp = document.getElementById('msgInput');
+    if (prevInp) htmlInputText = prevInp.value;
 
     switch(currentComponent) {
         case 'full-chat':
@@ -1279,7 +2267,7 @@ function render() {
             break;
         case 'sidebar':
             sidebarOpen = true;
-            sc.innerHTML = `${htmlNavBar()}<div class="empty-state"><img class="watermark-logo" src="${LOGO_B64}" alt=""></div>${isWatch?'':htmlInputBar()}${htmlSidebar()}`;
+            sc.innerHTML = `${htmlNavBar()}<div class="empty-state"><div class="watermark-logo" style="background:url('${LOGO_URL}') center/contain no-repeat"></div></div>${isWatch?'':htmlInputBar()}${htmlSidebar()}`;
             break;
         case 'mode-selector':
             sc.innerHTML = renderIsolated(`<div style="padding:0 12px">${htmlModeSelector(currentMode)}</div>`);
@@ -1287,8 +2275,280 @@ function render() {
         case 'chat-input':
             sc.innerHTML = `${htmlNavBar()}<div style="flex:1"></div>${htmlInputBar()}`;
             break;
+        case 'voice-input':
+            sc.innerHTML = renderIsolated(`<div style="display:flex;align-items:flex-end;gap:0;padding:10px 12px">
+                <button class="add-btn">+</button>
+                <div class="text-input-wrap" style="margin:0 10px"><input class="text-input" type="text" placeholder="Ask TradeGuru" disabled></div>
+                <button style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer">
+                    <svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="14" fill="var(--trade-green)"/><rect x="11" y="7" width="6" height="10" rx="3" fill="var(--trade-bg)"/><path d="M10 15a4 4 0 0 0 8 0" stroke="var(--trade-bg)" stroke-width="1.5" fill="none"/><line x1="14" y1="19" x2="14" y2="22" stroke="var(--trade-bg)" stroke-width="1.5"/></svg>
+                </button>
+            </div>`);
+            break;
+        case 'pipeline-status':
+            sc.innerHTML = `${htmlNavBar()}${htmlPipelineStatus()}<div style="flex:1"></div>`;
+            setTimeout(() => {
+                updatePipelineStatus('searching');
+                setTimeout(() => updatePipelineStatus('synthesizing'), 2000);
+                setTimeout(() => updatePipelineStatus('streaming'), 4000);
+                setTimeout(() => updatePipelineStatus(null), 6000);
+            }, 100);
+            break;
+        case 'onboarding':
+            sc.innerHTML = renderOnboarding();
+            break;
+        case 'settings':
+            sc.innerHTML = renderSettings();
+            break;
+        case 'disclaimer':
+            sc.innerHTML = renderDisclaimer();
+            break;
+        case 'camera':
+            sc.innerHTML = renderCamera();
+            break;
         default:
             sc.innerHTML = renderFullChat();
+    }
+
+    const newInp = document.getElementById('msgInput');
+    if (newInp && htmlInputText) {
+        newInp.value = htmlInputText;
+        if (newInp.tagName === 'TEXTAREA') {
+            newInp.style.height = 'auto';
+            newInp.style.height = Math.min(newInp.scrollHeight, 5 * 22) + 'px';
+        }
+    }
+    toggleSendBtn();
+}
+
+function toggleMock() {
+    mockMode = !mockMode;
+    document.getElementById('mockBtn').textContent = mockMode ? 'Mock: ON' : 'Mock: OFF';
+    document.getElementById('mockBtn').classList.toggle('active', !mockMode);
+    render();
+}
+
+function updatePipelineStatus(stage, detail) {
+    htmlPipelineStage = stage || 'idle';
+    const el = document.getElementById('pipelineStatus');
+    const icon = document.getElementById('pipelineIcon');
+    const text = document.getElementById('pipelineText');
+    if (!el || !icon || !text) return;
+
+    if (!stage || stage === 'idle' || stage === 'error') {
+        el.classList.add('hidden');
+        return;
+    }
+
+    const icons = {
+        searching: '🔍',
+        synthesizing: '🧠',
+        streaming: '💬'
+    };
+    const labels = {
+        searching: 'Searching knowledge base...',
+        synthesizing: 'Synthesizing response...',
+        streaming: 'Streaming...'
+    };
+
+    icon.textContent = icons[stage] || '';
+    text.textContent = detail || labels[stage] || stage;
+    el.classList.remove('hidden');
+}
+
+function newChat() {
+    const now = new Date();
+    MOCK.conversations.unshift({
+        id: 'c' + Date.now(),
+        title: 'New Conversation',
+        mode: currentMode,
+        date: now.toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric'}),
+        count: 0,
+        messages: []
+    });
+    currentConversation = 0;
+    modeCardDismissed = false;
+    sidebarOpen = false;
+    htmlIsStreaming = false;
+    htmlStreamingBlocks = [];
+    htmlError = null;
+    updatePipelineStatus(null);
+    render();
+}
+
+function selectConversation(index) {
+    currentConversation = index;
+    sidebarOpen = false;
+    htmlIsStreaming = false;
+    htmlStreamingBlocks = [];
+    htmlError = null;
+    updatePipelineStatus(null);
+    render();
+}
+
+function deleteConversation(index) {
+    if (index < 0 || index >= MOCK.conversations.length) return;
+    MOCK.conversations.splice(index, 1);
+    if (currentConversation === index) {
+        currentConversation = MOCK.conversations.length > 0 ? 0 : -1;
+        htmlIsStreaming = false;
+        htmlStreamingBlocks = [];
+        htmlError = null;
+    } else if (currentConversation > index) {
+        currentConversation--;
+    }
+    render();
+}
+
+function retryLastMessage() {
+    htmlError = null;
+    const conv = currentConversation >= 0 ? MOCK.conversations[currentConversation] : null;
+    if (!conv) return;
+    const apiMessages = conv.messages.map(m => ({
+        role: m.role,
+        content: m.blocks.map(b => b.content || '').join('\n')
+    }));
+    if (htmlLastSendType === 'vision' && htmlLastSendImageBase64) {
+        apiChatVision(apiMessages, currentMode, htmlLastSendImageBase64);
+    } else {
+        apiChat(apiMessages, currentMode);
+    }
+}
+
+function copyCode(codeId) {
+    const codeEl = document.getElementById(codeId);
+    const btnEl = document.getElementById(codeId + '_btn');
+    if (!codeEl || !btnEl) return;
+
+    const text = codeEl.textContent;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            btnEl.innerHTML = '<span style="color:var(--trade-green);font-size:11px">Copied</span>';
+            setTimeout(() => {
+                btnEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            }, 1500);
+        });
+    }
+}
+
+function sendMessage() {
+    const inp = document.getElementById('msgInput');
+    if (!inp || (!inp.value.trim() && !htmlAttachmentActive)) return;
+    const fallbackLabel = htmlAttachType === 'document' ? '[File: ' + (htmlAttachFileName || 'document') + ']' : '[Photo]';
+    const text = inp.value.trim() || fallbackLabel;
+
+    if (currentConversation < 0) {
+        const now = new Date();
+        MOCK.conversations.unshift({
+            id: 'c' + (MOCK.conversations.length + 1),
+            title: text.substring(0, 40),
+            mode: currentMode,
+            date: now.toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric'}),
+            count: 0,
+            messages: []
+        });
+        currentConversation = 0;
+    }
+
+    const conv = MOCK.conversations[currentConversation];
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    conv.messages.push({ role: 'user', blocks: [{type: 'text', content: text}], time: time });
+    conv.count = conv.messages.length;
+
+    const hadImage = htmlAttachImageData;
+    const imageBase64 = htmlAttachImageData;
+    const hadDocument = htmlAttachType === 'document' && htmlAttachFileData;
+    const docFile = htmlAttachFileData;
+    inp.value = '';
+    htmlInputText = '';
+    if (inp.tagName === 'TEXTAREA') { inp.style.height = 'auto'; }
+    htmlAttachmentActive = false;
+    htmlAttachImageData = null;
+    htmlAttachFileName = null;
+    htmlAttachThumbUrl = null;
+    htmlAttachType = 'image';
+    htmlAttachFileData = null;
+    toggleSendBtn();
+
+    if (!mockMode) {
+        const apiMessages = conv.messages.map(m => ({
+            role: m.role,
+            content: m.blocks.map(b => b.content || '').join('\n')
+        }));
+        if (hadDocument) {
+            htmlLastSendType = 'document';
+            apiUploadAndChat(conv, apiMessages, currentMode, docFile);
+        } else if (hadImage) {
+            htmlLastSendType = 'vision';
+            htmlLastSendImageBase64 = imageBase64;
+            apiChatVision(apiMessages, currentMode, imageBase64);
+        } else {
+            htmlLastSendType = 'text';
+            apiChat(apiMessages, currentMode);
+        }
+    } else {
+        htmlIsStreaming = true;
+        render();
+
+        const mode = conv.mode;
+        const mockResponses = {
+            0: [
+                {type: 'text', content: 'Based on your description, this sounds like it could be related to an earth leakage or insulation breakdown. Let me walk you through a diagnostic approach.'},
+                {type: 'stepList', title: 'Diagnostic Steps', steps: [
+                    'Isolate the affected circuit at the switchboard.',
+                    'Perform an insulation resistance test between active-earth and neutral-earth.',
+                    'Check for minimum 1 M\u03A9 at 500V DC per AS/NZS 3017.',
+                    'If the reading is below 1 M\u03A9, split the circuit at junction points and test each run individually.',
+                    'Identify and replace the faulty section.'
+                ]},
+                {type: 'warning', content: 'Always isolate and lock out circuits before testing. Confirm zero volts with a proving unit before touching any conductors.'}
+            ],
+            1: [
+                {type: 'heading', content: 'Understanding the Concept', level: 2},
+                {type: 'text', content: 'Great question! This is a fundamental concept in electrical installations. Let me break it down step by step so you can understand the underlying principles.'},
+                {type: 'callout', style: 'tip', content: 'When studying for your exams, focus on understanding the why behind each rule \u2014 not just memorising the clause numbers. The Wiring Rules are structured logically once you understand the safety principles.'}
+            ],
+            2: [
+                {type: 'text', content: 'Here is what the current standards and technical documentation say about this topic.'},
+                {type: 'regulation', code: 'AS/NZS 3000:2018', clause: 'Relevant Clause', summary: 'The Wiring Rules specify requirements for this type of installation. Always check with your local jurisdiction for any additional requirements.'},
+                {type: 'callout', style: 'info', content: 'Standards are updated periodically. Always verify you are referencing the current edition before quoting requirements to clients.'}
+            ]
+        };
+
+        let streamIndex = 0;
+        const streamInterval = setInterval(() => {
+            if (streamIndex < (mockResponses[mode] || mockResponses[0]).length) {
+                htmlStreamingBlocks.push((mockResponses[mode] || mockResponses[0])[streamIndex]);
+                streamIndex++;
+                render();
+                setTimeout(() => {
+                    const msgList = document.querySelector('.messages-list');
+                    if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+                }, 50);
+            } else {
+                clearInterval(streamInterval);
+                htmlIsStreaming = false;
+                const respTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+                conv.messages.push({
+                    role: 'assistant',
+                    mode: mode,
+                    blocks: htmlStreamingBlocks,
+                    time: respTime
+                });
+                conv.count = conv.messages.length;
+                if (conv.messages.length === 2) {
+                    conv.title = (conv.messages[0].blocks[0].content || '').substring(0, 40);
+                }
+                htmlStreamingBlocks = [];
+                render();
+
+                setTimeout(() => {
+                    const msgList = document.querySelector('.messages-list');
+                    if (msgList) msgList.lastElementChild?.scrollIntoView({behavior: 'smooth'});
+                }, 50);
+            }
+        }, 300);
     }
 }
 

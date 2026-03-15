@@ -321,7 +321,7 @@ All streaming endpoints follow this error contract:
 - **Parallel**: true (can run alongside create-utilities)
 - Create `utils/v1/openai-responses.ts` — POST to `/v1/responses` with streaming. Transform SSE stream. Extract token usage. Handle errors.
 - Create `utils/v1/openai-audio.ts` — POST multipart to `/v1/audio/transcriptions` (model: gpt-4o-transcribe) and POST to `/v1/audio/speech` (model: gpt-4o-mini-tts, voice: nova, format: aac)
-- Create `utils/v1/openai-files.ts` — POST multipart to `/v1/files` (purpose: assistants)
+- Create `utils/v1/openai-files.ts` — POST multipart to `/v1/files` (purpose: `user_data` for model inputs per current OpenAI guidance; fallback to `assistants` if `user_data` is rejected)
 - Create `utils/v1/openai-images.ts` — POST to `/v1/images/generations` (model: gpt-image-1.5)
 - All proxies read `OPENAI_API_KEY` from env (already exists on Vercel)
 - All OpenAI proxy functions have explicit timeouts: chat/vision 30s, transcription 60s, TTS 30s, file upload 60s, image generation 60s.
@@ -414,7 +414,9 @@ All streaming endpoints follow this error contract:
 - Response ID format: `resp_{timestamp}_{random8chars}` (generated server-side, included in done event). Use `crypto.randomBytes(4).toString('hex')` for the 8-char suffix — NOT `Math.random()`. This ensures cryptographic randomness.
 
 ### SSE Event Format
-All streaming endpoints use this SSE format:
+All streaming endpoints use a **TradeGuru app-level SSE contract**, NOT the raw OpenAI Responses stream. The relay's `openai-responses.ts` proxy transforms OpenAI's native SSE events into this app-level format before forwarding to clients. This decouples clients from OpenAI's wire format — if we swap to a custom model later, only the transform layer changes.
+
+**App-level SSE contract (what clients receive):**
 ```
 event: block\ndata: {"type": "text", "content": "..."}\n\n
 event: block\ndata: {"type": "code", "language": "python", "content": "..."}\n\n
@@ -426,7 +428,9 @@ On error mid-stream:
 event: error\ndata: {"code": "STREAM_INTERRUPTED", "message": "AI service error", "partial": true}\n\n
 ```
 
-Client parses `event:` field to distinguish block data from control events.
+**Transform responsibility:** `openai-responses.ts` receives OpenAI's native `response.*` SSE events, accumulates the JSON `content` string, parses the completed `{ blocks: [...] }` object, and re-emits each block as an individual `event: block` SSE frame. The `event: done` frame is emitted after OpenAI's stream completes with usage data extracted from the final response object.
+
+Client parses `event:` field to distinguish block data from control events. Clients NEVER see raw OpenAI SSE — only the app-level contract above.
 
 ### 8. Create Vision Relay Route
 - **Task ID**: create-vision-route
@@ -445,8 +449,8 @@ Client parses `event:` field to distinguish block data from control events.
 - **Assigned To**: routes-builder
 - **Agent Type**: general-purpose
 - **Parallel**: true
-- Create `api/v1/audio/transcribe.ts` — accepts multipart audio, proxies to OpenAI STT, returns `{ text }`. Max audio file size: 25MB (OpenAI limit). Validate MIME type: `audio/mp3`, `audio/mp4`, `audio/mpeg`, `audio/mpga`, `audio/m4a`, `audio/wav`, `audio/webm`. Return 415 for unsupported types.
-- Create `api/v1/audio/speech.ts` — accepts `{ text, voice? }`, proxies to OpenAI TTS, returns binary AAC. Default voice: `nova`. Voice parameter is normalised to lowercase before validation and cache key generation. Valid voices: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer` — reject others with 400. Text normalisation: lowercase, trim, collapse whitespace (same rules as question-hasher). Cache key: `tts:{SHA256(normalised_text + "|" + resolved_voice)}` with pipe delimiter. `resolved_voice` = explicit voice or `nova` if omitted/empty string. 24h TTL.
+- Create `api/v1/audio/transcribe.ts` — accepts multipart audio, proxies to OpenAI STT, returns `{ text }`. Max audio file size: 25MB (OpenAI limit). Validate MIME type: `audio/flac`, `audio/mp3`, `audio/mp4`, `audio/mpeg`, `audio/mpga`, `audio/m4a`, `audio/ogg`, `audio/wav`, `audio/webm`. Return 415 for unsupported types.
+- Create `api/v1/audio/speech.ts` — accepts `{ text, voice?, response_format? }`, proxies to OpenAI TTS. Default voice: `nova`, default format: `aac`. Voice parameter is normalised to lowercase before validation and cache key generation. Valid built-in voices: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` — do NOT reject unknown voices (OpenAI may add more or support custom voices; pass through to API and let OpenAI validate). Valid response_format: `aac`, `mp3`, `wav`, `flac`, `opus`, `pcm16` — reject others with 400. Text normalisation: lowercase, trim, collapse whitespace (same rules as question-hasher). Cache key: `tts:{SHA256(normalised_text + "|" + resolved_voice + "|" + resolved_format)}`. `resolved_voice` = explicit voice or `nova` if omitted. `resolved_format` = explicit format or `aac` if omitted. 24h TTL.
 
 ### 10. Create File Upload Route
 - **Task ID**: create-files-route

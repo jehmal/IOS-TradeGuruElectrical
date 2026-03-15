@@ -1,11 +1,13 @@
 import Foundation
+import SwiftData
 
-nonisolated struct Conversation: Codable, Identifiable {
-    let id: UUID
+@Model
+class Conversation {
+    var id: UUID
     var title: String
-    var messages: [ChatMessage]
+    @Relationship(deleteRule: .cascade, inverse: \ChatMessage.conversation) var messages: [ChatMessage]
     var mode: ThinkingMode
-    let createdAt: Date
+    var createdAt: Date
     var updatedAt: Date
 
     init(

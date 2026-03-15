@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 nonisolated enum ContentBlockType: String, Codable, CaseIterable {
     case text
@@ -15,13 +16,14 @@ nonisolated enum ContentBlockType: String, Codable, CaseIterable {
     case link
 }
 
-nonisolated struct ContentBlock: Codable, Identifiable {
-    let id: UUID
-    let type: ContentBlockType
+@Model
+class ContentBlock {
+    var id: UUID
+    var type: ContentBlockType
     var content: String?
     var title: String?
     var steps: [String]?
-    var items: [PartsItem]?
+    @Relationship(deleteRule: .cascade, inverse: \PartsItem.contentBlock) var items: [PartsItem]?
     var language: String?
     var code: String?
     var clause: String?
@@ -31,6 +33,7 @@ nonisolated struct ContentBlock: Codable, Identifiable {
     var headers: [String]?
     var level: Int?
     var style: String?
+    var message: ChatMessage?
 
     init(
         id: UUID = UUID(),
@@ -64,19 +67,5 @@ nonisolated struct ContentBlock: Codable, Identifiable {
         self.headers = headers
         self.level = level
         self.style = style
-    }
-}
-
-nonisolated struct PartsItem: Codable, Identifiable {
-    let id: UUID
-    let name: String
-    let spec: String
-    let qty: Int
-
-    init(id: UUID = UUID(), name: String, spec: String, qty: Int) {
-        self.id = id
-        self.name = name
-        self.spec = spec
-        self.qty = qty
     }
 }

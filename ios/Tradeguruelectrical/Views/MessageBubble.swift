@@ -2,6 +2,12 @@ import SwiftUI
 
 struct MessageBubble: View {
     let message: ChatMessage
+    var isLastAssistantMessage: Bool = false
+    var onRate: ((Int) -> Void)?
+    var onFlag: ((String) -> Void)?
+    var onSpeak: ((String) -> Void)?
+
+    @State private var userRating: Int = 0
 
     var body: some View {
         VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
@@ -21,6 +27,10 @@ struct MessageBubble: View {
                 Text(message.timestamp, style: .time)
                     .font(.system(size: 11))
                     .foregroundStyle(Color.tradeTextSecondary)
+            }
+
+            if message.role == .assistant && isLastAssistantMessage {
+                actionRow
             }
         }
         .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
@@ -51,6 +61,47 @@ struct MessageBubble: View {
         .background(Color.tradeSurface)
         .clipShape(.rect(cornerRadius: 16))
         .frame(maxWidth: 330, alignment: .leading)
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 8) {
+            ForEach(1...5, id: \.self) { star in
+                Button {
+                    userRating = star
+                    onRate?(star)
+                } label: {
+                    Image(systemName: star <= userRating ? "star.fill" : "star")
+                        .font(.system(size: 14))
+                        .foregroundStyle(star <= userRating ? Color.tradeGreen : Color.tradeTextSecondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Rate \(star) stars")
+            }
+
+            Button {
+                onFlag?("inappropriate")
+            } label: {
+                Image(systemName: "flag")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.tradeTextSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Report response")
+
+            Button {
+                let text = message.blocks
+                    .compactMap { $0.content }
+                    .joined(separator: "\n")
+                onSpeak?(text)
+            } label: {
+                Image(systemName: "speaker.wave.2")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.tradeTextSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Read aloud")
+        }
+        .frame(height: 44)
     }
 
     @ViewBuilder
@@ -99,10 +150,16 @@ struct MessageBubble: View {
                 .italic()
 
         case .link:
-            Text(block.content ?? block.url ?? "Link")
-                .font(.system(size: 14))
-                .foregroundStyle(Color.modeLearn)
-                .underline()
+            if let urlString = block.url, let url = URL(string: urlString) {
+                Link(block.content ?? urlString, destination: url)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.modeLearn)
+            } else {
+                Text(block.content ?? "Link")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.modeLearn)
+                    .underline()
+            }
         }
     }
 

@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 
 nonisolated enum MockData {
@@ -251,3 +252,4 @@ nonisolated enum MockData {
         mode: .research
     )
 }
+#endif

@@ -32,6 +32,7 @@ struct ModeSelector: View {
                     )
                     .clipShape(.rect(cornerRadius: 10))
                 }
+                .accessibilityLabel("Select \(mode.name) mode")
             }
         }
     }

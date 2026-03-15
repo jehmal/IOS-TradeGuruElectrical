@@ -1,0 +1,17 @@
+[
+  {
+    "id": "f2f30e55-ede8-4721-b81b-058f1bdbe1bb",
+    "name": "reviewer-a27e",
+    "role": "reviewer",
+    "tool": "codex",
+    "tmuxPaneId": "%22",
+    "worktreePath": "/mnt/c/users/jehma/desktop/Tradeguru-swft/.pi-teams/worktrees/reviewer-a27e",
+    "branchName": "pi-team/reviewer-a27e/1ee71fa8",
+    "taskId": "1ee71fa8",
+    "state": "working",
+    "cwd": "/mnt/c/users/jehma/desktop/Tradeguru-swft/.pi-teams/worktrees/reviewer-a27e",
+    "parentAgent": "human",
+    "startedAt": "2026-03-14T17:51:04.859872",
+    "lastActivity": "2026-03-14T17:51:04.859882"
+  }
+]

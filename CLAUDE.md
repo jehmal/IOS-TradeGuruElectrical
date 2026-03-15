@@ -2,9 +2,13 @@
 
 ## Mandatory
 
-1. When making changes to the HTML chat preview, do NOT modify or remove workbench utilities (device selector, light/dark mode toggle, pen/drawing tool, notes panel). These are dev workspace tools, not part of TradeGuru.
-2. Every new SwiftUI component that is created must also be added to the HTML component picker dropdown so it can be previewed in the browser viewer.
-3. This project is developed on Windows/WSL with no local Mac or Xcode. Every frontend SwiftUI view MUST have a matching pixel-identical HTML preview in `preview/chat.html` so the developer can see the design in a browser. Always produce both SwiftUI code and HTML output together for any frontend work.
+1. **Swift-first development.** The Swift/SwiftUI iOS app is the PRIMARY product. All features, logic, and architecture decisions are made for Swift FIRST. The HTML preview exists solely as a visual testing tool because the developer is on Windows/WSL with no Mac or Xcode. Never prioritise HTML over Swift. Never build features in HTML that don't exist in Swift. The Swift code is the source of truth — the HTML follows.
+2. When making changes to the HTML chat preview, do NOT modify or remove workbench utilities (device selector, light/dark mode toggle, pen/drawing tool, notes panel). These are dev workspace tools, not part of TradeGuru.
+3. Every new SwiftUI component that is created must also be added to the HTML component picker dropdown so it can be previewed in the browser viewer.
+4. This project is developed on Windows/WSL with no local Mac or Xcode. Every frontend SwiftUI view MUST have a matching pixel-identical HTML preview in `preview/chat.html` so the developer can see the design in a browser. Always produce both SwiftUI code and HTML output together for any frontend work.
+5. Before finalising any file that runs on Vercel Edge Runtime (`export const config = { runtime: 'edge' }` or imported by an Edge function), inspect it for Node.js-only APIs that cannot run on Edge Runtime. Prohibited APIs include: `Buffer`, `crypto` (Node module import), `fs`, `path`, `child_process`, `require()`, `process.cwd()`, `__dirname`, `__filename`. Use Web API equivalents instead (`TextEncoder`, `crypto.subtle`, `crypto.getRandomValues`, `fetch`, etc.).
+6. All behaviours the swift code has must also be mimicked 1 for 1, remember the html is how we test what the swft looks like, that includes behaviour
+7. **Swift-before-HTML execution order.** When making changes that affect both Swift and HTML, the Swift file MUST be completed and finalised first. Only after the Swift code is done should the HTML preview be updated. The HTML teammate/agent must re-read the finished Swift file before editing HTML so it mirrors the Swift implementation exactly. Never start HTML changes in parallel with Swift — always sequential: Swift first, then HTML mirrors it.
 
 ## Orchestration Rules
 

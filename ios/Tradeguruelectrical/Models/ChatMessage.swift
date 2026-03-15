@@ -1,19 +1,20 @@
 import Foundation
-
-extension ThinkingMode: Codable {}
+import SwiftData
 
 nonisolated enum MessageRole: String, Codable {
     case user
     case assistant
 }
 
-nonisolated struct ChatMessage: Codable, Identifiable {
-    let id: UUID
-    let role: MessageRole
-    let blocks: [ContentBlock]
-    let timestamp: Date
-    let mode: ThinkingMode
-    var attachments: [MessageAttachment]?
+@Model
+class ChatMessage {
+    var id: UUID
+    var role: MessageRole
+    @Relationship(deleteRule: .cascade, inverse: \ContentBlock.message) var blocks: [ContentBlock]
+    var timestamp: Date
+    var mode: ThinkingMode
+    @Relationship(deleteRule: .cascade, inverse: \MessageAttachment.message) var attachments: [MessageAttachment]?
+    var conversation: Conversation?
 
     init(
         id: UUID = UUID(),
@@ -30,32 +31,4 @@ nonisolated struct ChatMessage: Codable, Identifiable {
         self.mode = mode
         self.attachments = attachments
     }
-}
-
-nonisolated struct MessageAttachment: Codable, Identifiable {
-    let id: UUID
-    let type: AttachmentType
-    let fileName: String
-    let fileSize: Int?
-    let thumbnailData: Data?
-
-    init(
-        id: UUID = UUID(),
-        type: AttachmentType,
-        fileName: String,
-        fileSize: Int? = nil,
-        thumbnailData: Data? = nil
-    ) {
-        self.id = id
-        self.type = type
-        self.fileName = fileName
-        self.fileSize = fileSize
-        self.thumbnailData = thumbnailData
-    }
-}
-
-nonisolated enum AttachmentType: String, Codable {
-    case image
-    case video
-    case document
 }

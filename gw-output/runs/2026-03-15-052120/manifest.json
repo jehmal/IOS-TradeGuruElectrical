@@ -1,0 +1,1 @@
+{"agents": [{"elapsed_ms": 4023, "id": "agent_1", "input": 4, "output_tokens": 7, "status": "completed", "tokens": 11}], "budget": {"limit": null, "used": 11}, "mode": "single", "prompt": "say hello briefly", "timestamp": "2026-03-15T05:21:20Z", "totals": {"agents": 1, "completed": 1, "elapsed_ms": 4023, "failed": 0, "tokens": 11}, "version": "0.4.0"}

@@ -3,8 +3,15 @@ import SwiftUI
 struct SidebarView: View {
     let conversations: [Conversation]
     let onSelect: (Conversation) -> Void
+    let onDelete: (Conversation) -> Void
     let onNewChat: () -> Void
     let onClose: () -> Void
+    @State private var searchText = ""
+
+    private var filteredConversations: [Conversation] {
+        if searchText.isEmpty { return conversations }
+        return conversations.filter { $0.title.localizedStandardContains(searchText) }
+    }
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -27,17 +34,48 @@ struct SidebarView: View {
 
             Color.tradeBorder.frame(height: 1)
 
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(conversations) { conversation in
-                        Button {
-                            onSelect(conversation)
-                        } label: {
-                            conversationRow(conversation)
-                        }
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.tradeTextSecondary)
+                TextField("Search conversations", text: $searchText)
+                    .font(.system(size: 14))
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.tradeTextSecondary)
+                    }
+                    .accessibilityLabel("Clear search")
+                }
+            }
+            .padding(8)
+            .background(Color.tradeInput)
+            .clipShape(.rect(cornerRadius: 10))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+
+            List {
+                ForEach(filteredConversations) { conversation in
+                    Button {
+                        onSelect(conversation)
+                    } label: {
+                        conversationRow(conversation)
+                    }
+                    .accessibilityLabel(conversation.title)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        let conversation = filteredConversations[index]
+                        onDelete(conversation)
                     }
                 }
             }
+            .listStyle(.plain)
 
             Color.tradeBorder.frame(height: 1)
 
@@ -52,6 +90,7 @@ struct SidebarView: View {
                     .background(Color.tradeGreen)
                     .clipShape(.rect(cornerRadius: 12))
             }
+            .accessibilityLabel("Start new conversation")
             .padding(16)
         }
     }
@@ -72,6 +111,7 @@ struct SidebarView: View {
                     .foregroundStyle(Color.tradeTextSecondary)
                     .frame(width: 44, height: 44)
             }
+            .accessibilityLabel("Close menu")
         }
     }
 

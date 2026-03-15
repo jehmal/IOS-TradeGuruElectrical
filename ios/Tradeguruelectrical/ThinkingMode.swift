@@ -1,9 +1,9 @@
 import SwiftUI
 
-nonisolated enum ThinkingMode: String, CaseIterable, Identifiable {
-    case faultFinder
-    case learn
-    case research
+nonisolated enum ThinkingMode: String, CaseIterable, Identifiable, Codable {
+    case faultFinder = "fault_finder"
+    case learn = "learn"
+    case research = "research"
 
     nonisolated var id: String { rawValue }
 

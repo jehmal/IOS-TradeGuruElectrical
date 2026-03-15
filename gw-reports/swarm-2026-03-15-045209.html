@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoodWork Swarm Report</title>
+<style>
+:root {
+  --gradient-primary: linear-gradient(135deg, #B4E4F5 0%, #D4BBF0 50%, #E8BBDA 100%);
+  --color-purple: #9B8AC4;
+  --color-gray: #666666;
+  --bg: #FFF;
+  --text: #000;
+  --text-secondary: #666;
+  --card-bg: #F5F5F5;
+  --card-border: #000;
+  --table-header-bg: #8B8AC8;
+  --table-header-text: #FFF;
+  --table-border: #E8E8E8;
+  --stat-card-bg: #8B8AC8;
+  --success-bg: #F0FFF4;
+  --success-border: #4CAF50;
+  --warning-bg: #FFF8E6;
+  --warning-border: #E8A83C;
+  --error-bg: #FFF0F0;
+  --error-border: #F44336;
+  --info-bg: #F0F8FF;
+  --info-border: #8BB9E8;
+  --code-bg: #F5F5F5;
+  --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #1a1a2e;
+  --text: #e0e0e0;
+  --text-secondary: #999;
+  --card-bg: #16213e;
+  --card-border: #2a3a5a;
+  --table-header-bg: #6B6AB8;
+  --table-border: #2a3a5a;
+  --stat-card-bg: #6B6AB8;
+  --success-bg: #0a3d2e;
+  --success-border: #00d4aa;
+  --warning-bg: #3d3a0a;
+  --warning-border: #ffd700;
+  --error-bg: #3d0a0a;
+  --error-border: #ff4757;
+  --info-bg: #0a1d3d;
+  --info-border: #4a9eff;
+  --code-bg: #0d1b33;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.7;
+  padding: 80px 40px;
+}
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+.gradient-blur {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.4;
+  z-index: -1;
+  pointer-events: none;
+}
+.blur-tr {
+  top: -100px;
+  right: -100px;
+  background: radial-gradient(circle, #B4E4F5, #D4BBF0);
+}
+.blur-bl {
+  bottom: -100px;
+  left: -100px;
+  background: radial-gradient(circle, #E8BBDA, #D4BBF0);
+}
+.badge {
+  display: inline-block;
+  padding: 6px 20px;
+  border: 2px solid var(--card-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+h1 { font-size: 48px; font-weight: 500; line-height: 1.2; margin-bottom: 12px; }
+h2 { font-size: 36px; font-weight: 500; margin-bottom: 20px; margin-top: 48px; }
+.gradient-box {
+  background: var(--gradient-primary);
+  border-radius: 32px;
+  padding: 48px;
+  margin-bottom: 40px;
+  color: #1a1a2e;
+}
+.gradient-box p {
+  font-size: 16px;
+  color: #444;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+.stat-card {
+  background: var(--stat-card-bg);
+  color: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+}
+.stat-value { font-size: 48px; font-weight: 700; }
+.stat-label { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; opacity: 0.9; }
+.stat-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+.budget-track {
+  height: 6px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.budget-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 3px;
+}
+.card {
+  border: 2px solid var(--card-border);
+  border-radius: 20px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+.card-header {
+  padding: 16px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+  font-size: 15px;
+  min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.card-header:hover { opacity: 0.8; }
+.card-header:active { opacity: 0.6; }
+.card-body {
+  padding: 20px 24px;
+  border-top: 1px solid var(--table-border);
+}
+.icon-ok { color: var(--success-border); font-weight: 700; }
+.icon-fail { color: var(--error-border); font-weight: 700; }
+.agent-output {
+  font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.agent-output table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.agent-output th {
+  background: var(--table-header-bg);
+  color: var(--table-header-text);
+  padding: 8px 12px;
+  text-align: left;
+}
+.agent-output td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--table-border);
+}
+.agent-output code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.search-box { margin-bottom: 12px; }
+.search-box input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  font-family: var(--font);
+}
+.search-box input:focus { border-color: var(--color-purple); box-shadow: 0 0 0 3px rgba(155,138,196,0.2); }
+.search-box input::placeholder { color: var(--text-secondary); }
+.toggle-btn {
+  min-height: 44px;
+  background: var(--card-bg);
+  color: var(--text);
+  border: 2px solid var(--card-border);
+  padding: 8px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-family: var(--font);
+}
+.toggle-btn:hover { opacity: 0.8; }
+.token-table { width: 100%; border-collapse: collapse; }
+.token-table th {
+  background: var(--table-header-bg);
+  color: var(--table-header-text);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.token-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--table-border);
+}
+.token-table tfoot td {
+  color: var(--text-secondary);
+  font-style: italic;
+  border-bottom: none;
+}
+.share-bar-track {
+  display: inline-block;
+  width: 60px;
+  height: 8px;
+  background: var(--code-bg);
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 6px;
+  overflow: hidden;
+}
+.share-bar { height: 100%; background: var(--color-purple); border-radius: 4px; }
+.timeline-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.tl-id { min-width: 80px; font-size: 14px; font-weight: 600; color: var(--color-purple); }
+.tl-track { flex: 1; height: 28px; background: var(--code-bg); border-radius: 6px; overflow: hidden; }
+.tl-bar { height: 100%; border-radius: 6px; min-width: 2px; transition: width 0.3s; }
+.bar-ok { background: var(--success-border); }
+.bar-fail { background: var(--error-border); }
+.tl-stats { min-width: 140px; font-size: 13px; color: var(--text-secondary); text-align: right; }
+.success-box {
+  padding: 14px 20px;
+  background: var(--success-bg);
+  border-left: 4px solid var(--success-border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.warning-box {
+  padding: 14px 20px;
+  background: var(--warning-bg);
+  border-left: 4px solid var(--warning-border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.error-box {
+  padding: 14px 20px;
+  background: var(--error-bg);
+  border-left: 4px solid var(--error-border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.info-box {
+  padding: 14px 20px;
+  background: var(--info-bg);
+  border-left: 4px solid var(--info-border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+body, .card, .stat-card, .gradient-box, .search-box input, .toggle-btn {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .tl-bar { transition: none !important; }
+}
+.footer {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 60px;
+  padding-top: 24px;
+  padding-bottom: 40px;
+  border-top: 1px solid var(--table-border);
+}
+@media (max-width: 1024px) {
+  body { padding: 60px 32px; }
+  h1 { font-size: 36px; }
+  .stat-value { font-size: 36px; }
+}
+@media (max-width: 700px) {
+  body { padding: 24px 16px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; margin-top: 32px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-value { font-size: 28px; }
+  .stat-card { padding: 20px 16px; border-radius: 14px; }
+  .gradient-box { padding: 24px 16px; border-radius: 20px; }
+  .gradient-box h1 { font-size: 20px; }
+  .badge { font-size: 10px; padding: 4px 14px; margin-bottom: 16px; }
+  .card { border-radius: 14px; }
+  .card-header { padding: 12px 16px; font-size: 13px; flex-wrap: wrap; }
+  .card-body { padding: 14px 16px; }
+  .tl-stats { min-width: auto; font-size: 11px; }
+  .tl-id { min-width: 60px; font-size: 12px; }
+  .timeline-row { gap: 8px; }
+  .search-box input { padding: 10px 12px; font-size: 14px; border-radius: 10px; }
+  .toggle-btn { padding: 6px 14px; font-size: 12px; }
+  .token-table th, .token-table td { padding: 8px 10px; font-size: 13px; }
+  .agent-output { font-size: 0.8em; max-height: 300px; }
+  .footer { margin-top: 32px; }
+  .gradient-blur { width: 200px; height: 200px; }
+}
+@media (max-width: 380px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .banner-meta { font-size: 12px; }
+  .timeline-row { flex-wrap: wrap; }
+  .tl-track { min-width: 100%; }
+}
+@media print {
+  body { background: #fff !important; color: #000 !important; padding: 20px; }
+  .gradient-blur { display: none !important; }
+  #themeToggle { display: none !important; }
+  .search-box { display: none !important; }
+  .toggle-btn { display: none !important; }
+  .card { break-inside: avoid; border-color: #ccc !important; background: #f9f9f9 !important; }
+  .card-header { background: #f0f0f0 !important; color: #000 !important; }
+  .gradient-box { background: #f0f0f0 !important; color: #000 !important; border: 1px solid #ccc; }
+  .gradient-box p { color: #333 !important; }
+  .stat-card { background: #666 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .token-table th { background: #666 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .agent-output { max-height: none; overflow: visible; }
+  details.card { open: true; }
+  details.card[open] summary { border-bottom: 1px solid #ccc; }
+  h2 { color: #333 !important; }
+  .footer::after { content: " | Printed from GoodWork Swarm Report"; }
+  @page { margin: 2cm; }
+}
+
+</style>
+</head>
+<body>
+<button id="themeToggle" onclick="toggleTheme()" style="position:fixed;top:20px;right:20px;z-index:9999;width:44px;height:44px;border-radius:50%;border:2px solid var(--card-border);background:var(--card-bg);cursor:pointer;font-size:18px;-webkit-tap-highlight-color:transparent;" aria-label="Toggle theme">&#x1F319;</button>
+<div class="page">
+<div class="gradient-blur blur-tr"></div>
+<span class="badge">SWARM REPORT</span>
+<div class="gradient-box">
+<h1>3/3 agents completed successfully</h1>
+<p>2026-03-15 04:52:09 UTC | Duration: 8.4s | Tokens: ~140</p>
+</div>
+<div class="stat-grid">
+<div class="stat-card">
+<div class="stat-value">3/3</div>
+<div class="stat-label">Agents</div>
+<div class="stat-sub">completed</div>
+</div>
+<div class="stat-card">
+<div class="stat-value">8.4s</div>
+<div class="stat-label">Time</div>
+<div class="stat-sub">max elapsed</div>
+</div>
+<div class="stat-card">
+<div class="stat-value">~140</div>
+<div class="stat-label">Tokens</div>
+<div class="stat-sub">total</div>
+</div>
+<div class="stat-card">
+<div class="stat-value">140/10000</div>
+<div class="stat-label">Budget</div>
+<div class="stat-sub">usage</div>
+<div class="budget-track"><div class="budget-fill" style="width:1%"></div></div>
+</div>
+</div>
+<h2>Action Items</h2>
+<p style="color:var(--text-secondary)">No action items detected.</p>
+<h2>Agent Timeline</h2>
+<div class="card"><div class="card-body">
+<div class="timeline-row">
+<span class="tl-id">agent_1</span>
+<div class="tl-track">
+<div class="tl-bar bar-ok" style="width:66%"></div>
+</div>
+<span class="tl-stats">5.5s | ~46 tok</span>
+</div>
+<div class="timeline-row">
+<span class="tl-id">agent_2</span>
+<div class="tl-track">
+<div class="tl-bar bar-ok" style="width:100%"></div>
+</div>
+<span class="tl-stats">8.4s | ~46 tok</span>
+</div>
+<div class="timeline-row">
+<span class="tl-id">agent_3</span>
+<div class="tl-track">
+<div class="tl-bar bar-ok" style="width:85%"></div>
+</div>
+<span class="tl-stats">7.1s | ~48 tok</span>
+</div>
+</div></div>
+<h2>Agent Results</h2>
+<div class="search-box"><input type="text" id="search" placeholder="Search agent outputs..." oninput="filterOutputs()"></div>
+<button class="toggle-btn" onclick="toggleAll()">Toggle All</button>
+<details class="card" open>
+<summary class="card-header">
+<span class="icon-ok">&#10003;</span> <strong>agent_1</strong> <span style="color:var(--text-secondary)">completed | 5.5s | ~46 tok</span>
+</summary>
+<div class="card-body"><div class="agent-output" data-raw="Elixir is a functional, concurrent programming language built on the Erlang VM (BEAM), designed for building scalable, fault-tolerant applications with elegant syntax and powerful metaprogramming capabilities.">Elixir is a functional, concurrent programming language built on the Erlang VM (BEAM), designed for building scalable, fault-tolerant applications with elegant syntax and powerful metaprogramming capabilities.</div></div>
+</details>
+<details class="card">
+<summary class="card-header">
+<span class="icon-ok">&#10003;</span> <strong>agent_2</strong> <span style="color:var(--text-secondary)">completed | 8.4s | ~46 tok</span>
+</summary>
+<div class="card-body"><div class="agent-output" data-raw="Elixir is a dynamic, functional programming language built on the Erlang VM (BEAM) designed for building scalable, fault-tolerant, and maintainable applications—especially for concurrent and distributed systems.">Elixir is a dynamic, functional programming language built on the Erlang VM (BEAM) designed for building scalable, fault-tolerant, and maintainable applications—especially for concurrent and distributed systems.</div></div>
+</details>
+<details class="card">
+<summary class="card-header">
+<span class="icon-ok">&#10003;</span> <strong>agent_3</strong> <span style="color:var(--text-secondary)">completed | 7.1s | ~48 tok</span>
+</summary>
+<div class="card-body"><div class="agent-output" data-raw="Elixir is a functional, concurrent programming language built on the Erlang VM (BEAM) that excels at building scalable, fault-tolerant distributed systems with elegant syntax and powerful metaprogramming capabilities.">Elixir is a functional, concurrent programming language built on the Erlang VM (BEAM) that excels at building scalable, fault-tolerant distributed systems with elegant syntax and powerful metaprogramming capabilities.</div></div>
+</details>
+<h2>Token Breakdown</h2>
+<table class="token-table">
+<thead><tr><th>Agent</th><th>Input</th><th>Output</th><th>Total</th><th>Share</th></tr></thead>
+<tbody>
+<tr>
+<td>agent_1</td>
+<td>11</td>
+<td>35</td>
+<td>46</td>
+<td>
+<div class="share-bar-track"><div class="share-bar" style="width:32.9%"></div></div>
+32.9%
+</td>
+</tr>
+<tr>
+<td>agent_2</td>
+<td>11</td>
+<td>35</td>
+<td>46</td>
+<td>
+<div class="share-bar-track"><div class="share-bar" style="width:32.9%"></div></div>
+32.9%
+</td>
+</tr>
+<tr>
+<td>agent_3</td>
+<td>11</td>
+<td>37</td>
+<td>48</td>
+<td>
+<div class="share-bar-track"><div class="share-bar" style="width:34.3%"></div></div>
+34.3%
+</td>
+</tr>
+</tbody>
+<tfoot><tr><td colspan="5">Output efficiency: 76.4%</td></tr></tfoot>
+</table>
+<details>
+<summary><h2 style="display:inline">Metadata</h2></summary>
+<table class="token-table" style="margin-top:12px">
+<tbody>
+<tr><td>Prompt</td><td><pre style="white-space:pre-wrap;word-break:break-word;margin:0;font-size:0.85em">what is elixir in one sentence</pre></td></tr>
+<tr><td>Mode</td><td>single</td></tr>
+<tr><td>Budget Limit</td><td>10000</td></tr>
+<tr><td>Budget Used</td><td>140</td></tr>
+<tr><td>Timestamp</td><td>2026-03-15 04:52:09 UTC</td></tr>
+<tr><td>GoodWork Version</td><td>0.3.0</td></tr>
+</tbody>
+</table>
+</details>
+<div class="gradient-blur blur-bl"></div>
+<div class="footer">Generated with GoodWork v0.3.0</div>
+</div>
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var current = html.getAttribute('data-theme');
+  var next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  localStorage.setItem('gw-theme', next);
+}
+(function() {
+  var saved = localStorage.getItem('gw-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    var btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = '\u2600\uFE0F';
+  }
+})();
+function renderMarkdown(text) {
+  text = text.replace(/\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)*)/g, function(match, header, rows) {
+    var ths = header.split('|').filter(Boolean).map(function(h) { return '<th>' + h.trim() + '</th>'; }).join('');
+    var trs = rows.trim().split('\n').map(function(row) {
+      var tds = row.split('|').filter(Boolean).map(function(d) { return '<td>' + d.trim() + '</td>'; }).join('');
+      return '<tr>' + tds + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>';
+  });
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+(function() {
+  var outputs = document.querySelectorAll('.agent-output');
+  for (var i = 0; i < outputs.length; i++) {
+    var raw = outputs[i].getAttribute('data-raw');
+    if (raw) {
+      var decoded = raw.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+      outputs[i].innerHTML = renderMarkdown(decoded);
+    }
+  }
+})();
+function filterOutputs() {
+  var q = document.getElementById('search').value.toLowerCase();
+  var cards = document.querySelectorAll('details.card');
+  for (var i = 0; i < cards.length; i++) {
+    var output = cards[i].querySelector('.agent-output');
+    if (!output) continue;
+    var text = output.textContent.toLowerCase();
+    if (q === '' || text.indexOf(q) !== -1) {
+      cards[i].style.display = '';
+      if (q !== '') cards[i].open = true;
+    } else {
+      cards[i].style.display = 'none';
+    }
+  }
+}
+function toggleAll() {
+  var cards = document.querySelectorAll('details.card');
+  var allOpen = true;
+  for (var i = 0; i < cards.length; i++) {
+    if (!cards[i].open) { allOpen = false; break; }
+  }
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].open = !allOpen;
+  }
+}
+
+</script>
+<script type="application/json" id="swarm-data">{&quot;prompt&quot;:&quot;what is elixir in one sentence&quot;,&quot;mode&quot;:&quot;single&quot;,&quot;started_at&quot;:1773550329,&quot;agents&quot;:[{&quot;id&quot;:&quot;agent_1&quot;,&quot;status&quot;:&quot;completed&quot;,&quot;input&quot;:11,&quot;output&quot;:35,&quot;tokens&quot;:46,&quot;elapsed_ms&quot;:5510},{&quot;id&quot;:&quot;agent_2&quot;,&quot;status&quot;:&quot;completed&quot;,&quot;input&quot;:11,&quot;output&quot;:35,&quot;tokens&quot;:46,&quot;elapsed_ms&quot;:8400},{&quot;id&quot;:&quot;agent_3&quot;,&quot;status&quot;:&quot;completed&quot;,&quot;input&quot;:11,&quot;output&quot;:37,&quot;tokens&quot;:48,&quot;elapsed_ms&quot;:7104}],&quot;budget&quot;:{&quot;used&quot;:140,&quot;limit&quot;:10000}}</script>
+</body>
+</html>

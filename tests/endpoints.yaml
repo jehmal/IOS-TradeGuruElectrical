@@ -1,0 +1,245 @@
+base_url: https://tradeguru.com.au
+vercel_project: expo-chatgpt-clone
+log_dir: tests/logs/endpoint
+
+# Shared test device - register fresh if expired
+test_device:
+  platform: ios
+  os_version: "18.0"
+  app_version: "1.0.0"
+  locale: en-AU
+  timezone: Australia/Sydney
+
+endpoints:
+  - slug: device-register
+    method: POST
+    path: /api/v1/device/register
+    auth: none
+    body:
+      platform: ios
+      os_version: "18.0"
+      app_version: "1.0.0"
+      locale: en-AU
+      timezone: Australia/Sydney
+    expect:
+      status: 201
+      body_contains: device_id
+    notes: Returns UUID v4 device_id. Store for subsequent tests.
+
+  - slug: device-register-bad-platform
+    method: POST
+    path: /api/v1/device/register
+    auth: none
+    body:
+      platform: windows
+      os_version: "10"
+      app_version: "1.0.0"
+      locale: en-US
+      timezone: America/New_York
+    expect:
+      status: 400
+      body_contains: INVALID_PLATFORM
+
+  - slug: chat
+    method: POST
+    path: /api/v1/chat
+    auth: device
+    content_type: application/json
+    body:
+      messages:
+        - role: user
+          content: "Why is my RCD tripping?"
+      mode: fault_finder
+      platform: ios
+    expect:
+      status: 200
+      content_type: text/event-stream
+      sse_events: [block, done]
+    notes: Primary streaming endpoint. Expect SSE blocks then done event.
+
+  - slug: chat-bad-mode
+    method: POST
+    path: /api/v1/chat
+    auth: device
+    body:
+      messages:
+        - role: user
+          content: "test"
+      mode: invalid_mode
+      platform: ios
+    expect:
+      status: 400
+      body_contains: Invalid mode
+
+  - slug: chat-empty-messages
+    method: POST
+    path: /api/v1/chat
+    auth: device
+    body:
+      messages: []
+      mode: fault_finder
+      platform: ios
+    expect:
+      status: 400
+      body_contains: must not be empty
+
+  - slug: chat-no-auth
+    method: POST
+    path: /api/v1/chat
+    auth: none
+    body:
+      messages:
+        - role: user
+          content: "test"
+      mode: fault_finder
+      platform: ios
+    expect:
+      status: 401
+
+  - slug: chat-invalid-device
+    method: POST
+    path: /api/v1/chat
+    auth: device_override
+    device_id: not-a-uuid
+    body:
+      messages:
+        - role: user
+          content: "test"
+      mode: fault_finder
+      platform: ios
+    expect:
+      status: 400
+      body_contains: Invalid device ID
+
+  - slug: chat-vision
+    method: POST
+    path: /api/v1/chat/vision
+    auth: device
+    body:
+      message: "What cable is this?"
+      image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      mode: fault_finder
+      platform: ios
+    expect:
+      status: 200
+      content_type: text/event-stream
+    notes: Vision endpoint with minimal 1x1 test image.
+
+  - slug: audio-transcribe-no-file
+    method: POST
+    path: /api/v1/audio/transcribe
+    auth: device
+    body: null
+    expect:
+      status: 400
+    notes: No multipart file provided.
+
+  - slug: audio-speech
+    method: POST
+    path: /api/v1/audio/speech
+    auth: device
+    body:
+      text: "This is a test of the text to speech endpoint."
+      voice: nova
+      response_format: aac
+    expect:
+      status: 200
+      content_type_contains: audio
+    notes: Returns audio binary. Check content-type is audio/*.
+
+  - slug: files-upload-no-file
+    method: POST
+    path: /api/v1/files/upload
+    auth: device
+    body: null
+    expect:
+      status: 400
+    notes: No multipart file provided.
+
+  - slug: rating
+    method: POST
+    path: /api/v1/rating
+    auth: device
+    body:
+      response_id: resp_1710000000_a1b2c3d4
+      stars: 5
+      mode: fault_finder
+    expect:
+      status: 201
+      body_contains: rating_id
+    notes: Submit a 5-star rating.
+
+  - slug: rating-invalid-stars
+    method: POST
+    path: /api/v1/rating
+    auth: device
+    body:
+      response_id: resp_1710000000_a1b2c3d4
+      stars: 10
+      mode: fault_finder
+    expect:
+      status: 400
+
+  - slug: feedback
+    method: POST
+    path: /api/v1/feedback
+    auth: device
+    body:
+      response_id: resp_1710000000_a1b2c3d4
+      reason: wrong
+      mode: fault_finder
+    expect:
+      status: 201
+      body_contains: feedback_id
+
+  - slug: feedback-invalid-reason
+    method: POST
+    path: /api/v1/feedback
+    auth: device
+    body:
+      response_id: resp_1710000000_a1b2c3d4
+      reason: garbage
+      mode: fault_finder
+    expect:
+      status: 400
+
+  - slug: device-link-no-jwt
+    method: POST
+    path: /api/v1/device/link
+    auth: device
+    body:
+      device_id: will-be-replaced
+    expect:
+      status: 401
+    notes: Device-only auth cannot link. Requires WorkOS JWT.
+
+  - slug: device-unlink-no-jwt
+    method: POST
+    path: /api/v1/device/unlink
+    auth: device
+    body:
+      device_id: will-be-replaced
+    expect:
+      status: 401
+    notes: Device-only auth cannot unlink. Requires WorkOS JWT.
+
+  - slug: admin-stats-no-auth
+    method: GET
+    path: /api/v1/admin/stats
+    auth: none
+    expect:
+      status: 403
+    notes: Admin endpoint requires ADMIN_TOKEN + IP allowlist.
+
+  - slug: webhook-revenuecat-no-auth
+    method: POST
+    path: /api/webhook/revenuecat
+    auth: none
+    body:
+      api_version: "1.0"
+      event:
+        type: TEST
+        app_user_id: test_user
+    expect:
+      status: 401
+    notes: RevenueCat webhook requires auth header.

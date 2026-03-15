@@ -1,0 +1,14 @@
+[
+  {
+    "id": "msg-0b86c9f7",
+    "from": "human",
+    "to": "reviewer-a27e",
+    "subject": "Task: Review official OpenAI API documentation against specs/add-relay-endpoints-to-tr",
+    "body": "Review official OpenAI API documentation against specs/add-relay-endpoints-to-tradeguru.md. Fetch the official OpenAI docs for: 1) Responses API /v1/responses (model gpt-4o, streaming SSE), 2) Audio Transcription /v1/audio/transcriptions (model gpt-4o-transcribe), 3) Audio Speech /v1/audio/speech (model gpt-4o-mini-tts, voices alloy/echo/fable/onyx/nova/shimmer), 4) Files API /v1/files, 5) Images API /v1/images/generations (model gpt-image-1.5), 6) Pricing (gpt-4o at 2.50/10 per 1M tokens). Cross-reference every endpoint URL, model name, request/response schema, SSE format, voice options, audio formats, file size limits, and pricing. Flag discrepancies. Write findings to specs/openai-api-review.md",
+    "type": "dispatch",
+    "priority": "normal",
+    "threadId": null,
+    "read": false,
+    "createdAt": "2026-03-14T17:51:06.861767"
+  }
+]

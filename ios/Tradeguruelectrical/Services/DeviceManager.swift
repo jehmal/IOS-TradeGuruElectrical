@@ -14,6 +14,10 @@ nonisolated struct DeviceManager {
         return newId
     }
 
+    static func save(_ deviceId: String) {
+        saveToKeychain(deviceId)
+    }
+
     private static func readFromKeychain() -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
