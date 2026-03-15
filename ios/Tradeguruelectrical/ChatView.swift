@@ -204,10 +204,10 @@ struct ChatView: View {
         }
         .onChange(of: selectedMode) { _, newMode in
             userDismissedCard = false
+            viewModel?.selectedMode = newMode
             withAnimation(.easeInOut(duration: 0.2)) {
                 showModeCard = true
             }
-            viewModel.selectedMode = newMode
         }
     }
 
