@@ -189,6 +189,7 @@ struct CameraPreviewView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
+        guard uiView.bounds.width > 0, uiView.bounds.height > 0 else { return }
         context.coordinator.previewLayer?.frame = uiView.bounds
     }
 
