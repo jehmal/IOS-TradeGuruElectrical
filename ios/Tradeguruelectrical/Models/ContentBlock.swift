@@ -75,7 +75,7 @@ extension ContentBlock: Decodable {
         case id, type, content, title, steps, items, language, code, clause, summary, url, rows, headers, level, style
     }
 
-    convenience init(from decoder: Decoder) throws {
+    required convenience init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: (try? c.decode(UUID.self, forKey: .id)) ?? UUID(),

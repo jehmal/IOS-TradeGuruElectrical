@@ -22,7 +22,7 @@ extension PartsItem: Decodable {
         case id, name, spec, qty
     }
 
-    convenience init(from decoder: Decoder) throws {
+    required convenience init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: (try? c.decode(UUID.self, forKey: .id)) ?? UUID(),
