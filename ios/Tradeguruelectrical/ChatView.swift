@@ -122,14 +122,10 @@ struct ChatView: View {
                 .padding(.vertical, 12)
             }
             .onChange(of: viewModel.activeConversation?.messages.count) { _, _ in
-                withAnimation {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
+                proxy.scrollTo("bottom", anchor: .bottom)
             }
             .onChange(of: viewModel.streamingBlocks.count) { _, _ in
-                withAnimation {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
+                proxy.scrollTo("bottom", anchor: .bottom)
             }
         }
     }
