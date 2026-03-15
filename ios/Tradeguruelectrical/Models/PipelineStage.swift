@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum PipelineStage: String, Codable {
+nonisolated enum PipelineStage: String, Codable, Sendable {
     case idle
     case searching
     case synthesizing

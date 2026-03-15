@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum JWTDecoder {
+nonisolated enum JWTDecoder: Sendable {
     static func decode(_ jwt: String) -> (user: AuthUser, expiresAt: Date)? {
         let segments = jwt.split(separator: ".")
         guard segments.count == 3 else { return nil }

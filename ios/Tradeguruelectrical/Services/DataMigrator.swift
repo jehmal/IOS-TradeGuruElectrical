@@ -92,7 +92,7 @@ enum DataMigrator {
     }
 }
 
-private struct LegacyConversation: Codable {
+private nonisolated struct LegacyConversation: Codable, Sendable {
     let id: UUID
     var title: String
     var messages: [LegacyMessage]
@@ -101,7 +101,7 @@ private struct LegacyConversation: Codable {
     var updatedAt: Date
 }
 
-private struct LegacyMessage: Codable {
+private nonisolated struct LegacyMessage: Codable, Sendable {
     let id: UUID
     let role: MessageRole
     let blocks: [LegacyContentBlock]
@@ -110,7 +110,7 @@ private struct LegacyMessage: Codable {
     var attachments: [LegacyAttachment]?
 }
 
-private struct LegacyContentBlock: Codable {
+private nonisolated struct LegacyContentBlock: Codable, Sendable {
     let id: UUID
     let type: ContentBlockType
     var content: String?
@@ -128,7 +128,7 @@ private struct LegacyContentBlock: Codable {
     var style: String?
 }
 
-private struct LegacyAttachment: Codable {
+private nonisolated struct LegacyAttachment: Codable, Sendable {
     let id: UUID
     let type: AttachmentType
     let fileName: String
@@ -136,7 +136,7 @@ private struct LegacyAttachment: Codable {
     let thumbnailData: Data?
 }
 
-private struct LegacyPartsItem: Codable {
+private nonisolated struct LegacyPartsItem: Codable, Sendable {
     let id: UUID
     let name: String
     let spec: String

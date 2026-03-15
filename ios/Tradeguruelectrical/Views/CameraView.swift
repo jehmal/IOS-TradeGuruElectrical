@@ -1,5 +1,5 @@
 import SwiftUI
-import AVFoundation
+@preconcurrency import AVFoundation
 
 struct CameraView: View {
     let onCapture: (Data) -> Void
@@ -116,6 +116,7 @@ struct CameraView: View {
     }
 }
 
+@MainActor
 class CameraController: NSObject, AVCapturePhotoCaptureDelegate {
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -140,14 +141,16 @@ class CameraController: NSObject, AVCapturePhotoCaptureDelegate {
 
         session.commitConfiguration()
 
+        let captureSession = session
         Task.detached {
-            self.session.startRunning()
+            captureSession.startRunning()
         }
     }
 
     func stop() {
+        let captureSession = session
         Task.detached {
-            self.session.stopRunning()
+            captureSession.stopRunning()
         }
     }
 
@@ -167,8 +170,8 @@ class CameraController: NSObject, AVCapturePhotoCaptureDelegate {
 
     nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation() else { return }
-        Task { @MainActor [captureCompletion] in
-            captureCompletion?(data)
+        Task { @MainActor [weak self] in
+            self?.captureCompletion?(data)
         }
     }
 }

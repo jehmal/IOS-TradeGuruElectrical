@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-nonisolated enum PKCEHelper {
+nonisolated enum PKCEHelper: Sendable {
     static func generateVerifier() -> String {
         let unreserved = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
         let length = 64

@@ -25,7 +25,7 @@ class MessageAttachment {
     }
 }
 
-nonisolated enum AttachmentType: String, Codable {
+nonisolated enum AttachmentType: String, Codable, Sendable {
     case image
     case video
     case document

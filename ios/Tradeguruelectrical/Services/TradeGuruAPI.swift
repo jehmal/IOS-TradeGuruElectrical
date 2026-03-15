@@ -1,6 +1,6 @@
 import Foundation
 
-enum TradeGuruAPIError: Error {
+nonisolated enum TradeGuruAPIError: Error {
     case noDeviceId
     case httpError(Int, String)
     case decodingError(String)
@@ -235,18 +235,18 @@ enum TradeGuruAPI {
 
 // MARK: - Response Types
 
-nonisolated struct DeviceRegisterResponse: Codable {
+nonisolated struct DeviceRegisterResponse: Codable, Sendable {
     let deviceId: String
     enum CodingKeys: String, CodingKey {
         case deviceId = "device_id"
     }
 }
 
-nonisolated struct TranscribeResponse: Codable {
+nonisolated struct TranscribeResponse: Codable, Sendable {
     let text: String
 }
 
-nonisolated struct FileUploadResponse: Codable {
+nonisolated struct FileUploadResponse: Codable, Sendable {
     let id: String
     let filename: String
 }

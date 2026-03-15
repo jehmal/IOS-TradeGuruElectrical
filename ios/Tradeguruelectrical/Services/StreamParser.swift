@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated struct SSEEvent {
+nonisolated struct SSEEvent: Sendable {
     let event: String
     let data: String
 }

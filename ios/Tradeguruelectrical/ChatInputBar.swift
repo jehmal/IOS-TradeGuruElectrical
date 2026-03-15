@@ -1,6 +1,6 @@
 import SwiftUI
 import PhotosUI
-import AVFoundation
+@preconcurrency import AVFoundation
 import UniformTypeIdentifiers
 
 struct ChatInputBar: View {

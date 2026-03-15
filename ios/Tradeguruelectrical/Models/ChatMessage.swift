@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-nonisolated enum MessageRole: String, Codable {
+nonisolated enum MessageRole: String, Codable, Sendable {
     case user
     case assistant
 }

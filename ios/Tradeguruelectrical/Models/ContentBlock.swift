@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-nonisolated enum ContentBlockType: String, Codable, CaseIterable {
+nonisolated enum ContentBlockType: String, Codable, CaseIterable, Sendable {
     case text
     case heading
     case stepList = "step_list"

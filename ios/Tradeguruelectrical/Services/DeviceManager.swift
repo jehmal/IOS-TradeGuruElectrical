@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-nonisolated struct DeviceManager {
+nonisolated struct DeviceManager: Sendable {
     private static let service = "com.tradeguru.electrical"
     private static let account = "device_id"
 

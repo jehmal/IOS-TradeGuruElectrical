@@ -198,7 +198,7 @@ class AuthManager {
     }
 }
 
-private nonisolated struct TokenResponse: Codable {
+private nonisolated struct TokenResponse: Codable, Sendable {
     let accessToken: String
     let refreshToken: String
 

@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-nonisolated enum KeychainHelper {
+nonisolated enum KeychainHelper: Sendable {
     private static let service = "com.tradeguru.electrical.auth"
 
     static func save<T: Codable>(_ value: T, forKey key: String) {

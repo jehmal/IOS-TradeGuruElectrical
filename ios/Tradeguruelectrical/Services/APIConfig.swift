@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum APIConfig {
+nonisolated enum APIConfig: Sendable {
     #if DEBUG
     nonisolated(unsafe) static var useMockData = false
     #endif
