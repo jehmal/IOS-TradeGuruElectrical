@@ -80,7 +80,8 @@ struct SafetyDisclaimerView: View {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                Task {
+                                    try? await Task.sleep(for: .milliseconds(500))
                                     hasScrolledToBottom = true
                                 }
                             }

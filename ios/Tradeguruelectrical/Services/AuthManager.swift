@@ -21,6 +21,7 @@ class AuthManager {
     }
 
     private var pendingVerifier: String?
+    private var authSession: ASWebAuthenticationSession?
 
     private init() {}
 
@@ -49,7 +50,8 @@ class AuthManager {
             let session = ASWebAuthenticationSession(
                 url: url,
                 callbackURLScheme: "tradeguru"
-            ) { callbackURL, error in
+            ) { [weak self] callbackURL, error in
+                self?.authSession = nil
                 guard error == nil,
                       let callbackURL,
                       let comps = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
@@ -62,6 +64,7 @@ class AuthManager {
             }
             session.prefersEphemeralWebBrowserSession = false
             session.presentationContextProvider = AuthPresentationContext.shared
+            authSession = session
             session.start()
         }
 

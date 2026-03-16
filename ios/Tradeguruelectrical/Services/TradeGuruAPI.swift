@@ -8,7 +8,7 @@ nonisolated enum TradeGuruAPIError: Error {
     case networkError(Error)
 }
 
-enum TradeGuruAPI {
+nonisolated enum TradeGuruAPI {
 
     // MARK: - Device Registration
 

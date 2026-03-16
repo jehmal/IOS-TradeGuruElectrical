@@ -20,6 +20,7 @@ struct TradeguruelectricalApp: App {
             do {
                 let inMemory = try ModelContainer(
                     for: Conversation.self,
+                    migrationPlan: TradeGuruMigrationPlan.self,
                     configurations: ModelConfiguration(isStoredInMemoryOnly: true)
                 )
                 self.container = inMemory
@@ -28,13 +29,14 @@ struct TradeguruelectricalApp: App {
             }
         } else {
             do {
-                let container = try ModelContainer(for: Conversation.self)
+                let container = try ModelContainer(for: Conversation.self, migrationPlan: TradeGuruMigrationPlan.self)
                 DataMigrator.migrateIfNeeded(context: container.mainContext)
                 self.container = container
             } catch {
                 do {
                     let fallback = try ModelContainer(
                         for: Conversation.self,
+                        migrationPlan: TradeGuruMigrationPlan.self,
                         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
                     )
                     self.container = fallback
@@ -69,10 +71,11 @@ struct TradeguruelectricalApp: App {
         do {
             return try ModelContainer(
                 for: Conversation.self,
+                migrationPlan: TradeGuruMigrationPlan.self,
                 configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             )
         } catch {
-            return try! ModelContainer(for: Conversation.self)
+            return try! ModelContainer(for: Conversation.self, migrationPlan: TradeGuruMigrationPlan.self)
         }
     }
 

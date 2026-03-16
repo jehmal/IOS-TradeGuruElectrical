@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-enum DataMigrator {
+nonisolated enum DataMigrator {
     private static let migrationKey = "swiftdata_migrated"
     private static let fileName = "conversations.json"
 

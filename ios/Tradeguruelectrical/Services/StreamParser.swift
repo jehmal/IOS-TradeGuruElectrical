@@ -40,7 +40,7 @@ nonisolated struct StatusPayload: Codable, Sendable {
     let detail: String?
 }
 
-enum StreamParser {
+nonisolated enum StreamParser {
 
     static func parse(lines: AsyncLineSequence<URLSession.AsyncBytes>) -> AsyncStream<StreamResult> {
         AsyncStream { continuation in

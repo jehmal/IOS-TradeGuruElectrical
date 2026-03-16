@@ -12,7 +12,7 @@ struct StepListView: View {
                     .foregroundStyle(Color.tradeText)
             }
 
-            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+            ForEach(Array(steps.enumerated()), id: \.element) { index, step in
                 HStack(alignment: .top, spacing: 8) {
                     Text("\(index + 1)")
                         .font(.system(size: 12, weight: .bold))
