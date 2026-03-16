@@ -67,7 +67,13 @@ struct ChatView: View {
             userDismissedCard = false
             viewModel.selectedMode = newMode
             showModeCard = true
-            NSLog("[TG] Mode switch complete")
+            NSLog("[TG] Mode switch complete — showModeCard: \(showModeCard)")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                NSLog("[TG] Main thread alive 1s after mode switch")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                NSLog("[TG] Main thread alive 3s after mode switch")
+            }
         }
     }
 

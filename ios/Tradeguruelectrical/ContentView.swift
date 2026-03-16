@@ -19,8 +19,6 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)
-        .animation(.easeInOut(duration: 0.3), value: hasAcceptedDisclaimer)
     }
 }
 
