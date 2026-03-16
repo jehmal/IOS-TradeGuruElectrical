@@ -15,7 +15,7 @@ struct ChatNavBar: View {
                     .foregroundStyle(Color.tradeText)
             }
             .frame(width: 44, height: 44)
-            .accessibilityLabel("Menu")
+            .accessibilityLabel(Text(verbatim: "Menu"))
 
             Spacer()
 
@@ -27,7 +27,7 @@ struct ChatNavBar: View {
                     .foregroundStyle(Color.tradeText)
             }
             .frame(width: 44, height: 44)
-            .accessibilityLabel("Settings")
+            .accessibilityLabel(Text(verbatim: "Settings"))
 
             Button {
                 onNewChat()
@@ -37,7 +37,7 @@ struct ChatNavBar: View {
                     .foregroundStyle(Color.tradeText)
             }
             .frame(width: 44, height: 44)
-            .accessibilityLabel("New conversation")
+            .accessibilityLabel(Text(verbatim: "New conversation"))
         }
     }
 }

@@ -86,7 +86,7 @@ struct MessageBubble: View {
                         .foregroundStyle(star <= userRating ? Color.tradeGreen : Color.tradeTextSecondary)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Rate \(star) stars")
+                .accessibilityLabel(Text(verbatim: "Rate \(star) stars"))
             }
 
             Button {
@@ -97,7 +97,7 @@ struct MessageBubble: View {
                     .foregroundStyle(Color.tradeTextSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Report response")
+            .accessibilityLabel(Text(verbatim: "Report response"))
 
             Button {
                 let text = message.blocks
@@ -110,7 +110,7 @@ struct MessageBubble: View {
                     .foregroundStyle(Color.tradeTextSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Read aloud")
+            .accessibilityLabel(Text(verbatim: "Read aloud"))
         }
         .frame(height: 44)
     }

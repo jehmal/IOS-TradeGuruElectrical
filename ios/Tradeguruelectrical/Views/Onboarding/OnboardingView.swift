@@ -23,7 +23,7 @@ struct OnboardingView: View {
                         .foregroundStyle(Color.tradeTextSecondary)
                         .padding(.trailing, 20)
                         .padding(.top, 8)
-                        .accessibilityLabel("Skip onboarding")
+                        .accessibilityLabel(Text(verbatim: "Skip onboarding"))
                     }
                 }
 

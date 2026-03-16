@@ -114,8 +114,8 @@ struct SafetyDisclaimerView: View {
                             .clipShape(.rect(cornerRadius: 14))
                     }
                     .disabled(!hasScrolledToBottom)
-                    .accessibilityLabel("Accept safety disclaimer")
-                    .accessibilityHint(hasScrolledToBottom ? "Double tap to accept" : "Scroll to bottom to enable")
+                    .accessibilityLabel(Text(verbatim: "Accept safety disclaimer"))
+                    .accessibilityHint(Text(verbatim: hasScrolledToBottom ? "Double tap to accept" : "Scroll to bottom to enable"))
                     .animation(.easeOut(duration: 0.3), value: hasScrolledToBottom)
                     .padding(.horizontal, 24)
 

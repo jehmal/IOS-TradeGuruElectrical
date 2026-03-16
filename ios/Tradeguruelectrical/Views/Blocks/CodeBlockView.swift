@@ -37,7 +37,7 @@ struct CodeBlockView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Copy code")
+                .accessibilityLabel(Text(verbatim: "Copy code"))
             }
             .padding(.horizontal, 12)
             .padding(.top, 8)

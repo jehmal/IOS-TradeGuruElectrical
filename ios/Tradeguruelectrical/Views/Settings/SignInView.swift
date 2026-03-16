@@ -24,7 +24,7 @@ struct SignInView: View {
                                 .stroke(Color.tradeBorder, lineWidth: 1)
                         )
                 }
-                .accessibilityLabel("Sign in with Google")
+                .accessibilityLabel(Text(verbatim: "Sign in with Google"))
 
                 Button {
                     onAppleSignIn()
@@ -37,7 +37,7 @@ struct SignInView: View {
                         .background(.black)
                         .clipShape(.rect(cornerRadius: 12))
                 }
-                .accessibilityLabel("Sign in with Apple")
+                .accessibilityLabel(Text(verbatim: "Sign in with Apple"))
 
                 Button {
                     onEmailSignIn()
@@ -50,7 +50,7 @@ struct SignInView: View {
                         .background(Color.tradeGreen)
                         .clipShape(.rect(cornerRadius: 12))
                 }
-                .accessibilityLabel("Sign in with email")
+                .accessibilityLabel(Text(verbatim: "Sign in with email"))
             }
             .padding(24)
             .navigationTitle("Sign In")

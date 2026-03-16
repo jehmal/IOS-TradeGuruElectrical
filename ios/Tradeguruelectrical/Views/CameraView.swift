@@ -41,7 +41,7 @@ struct CameraView: View {
                             .background(.ultraThinMaterial)
                             .clipShape(Circle())
                     }
-                    .accessibilityLabel("Close camera")
+                    .accessibilityLabel(Text(verbatim: "Close camera"))
                     .padding(.trailing, 16)
                     .padding(.top, 16)
                 }
@@ -58,7 +58,7 @@ struct CameraView: View {
                             .foregroundStyle(flashOn ? .yellow : .white)
                             .frame(width: 44, height: 44)
                     }
-                    .accessibilityLabel(flashOn ? "Flash on" : "Flash off")
+                    .accessibilityLabel(Text(verbatim: flashOn ? "Flash on" : "Flash off"))
 
                     Spacer()
 
@@ -80,7 +80,7 @@ struct CameraView: View {
                                 )
                         }
                     }
-                    .accessibilityLabel("Take photo")
+                    .accessibilityLabel(Text(verbatim: "Take photo"))
 
                     Spacer()
 

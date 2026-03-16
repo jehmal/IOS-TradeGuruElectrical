@@ -11,7 +11,7 @@ struct TierBadgeView: View {
             .padding(.vertical, 4)
             .background(tier.color.opacity(0.15))
             .clipShape(.rect(cornerRadius: 8))
-            .accessibilityLabel("\(tier.displayName) plan")
+            .accessibilityLabel(Text(verbatim: "\(tier.displayName) plan"))
     }
 }
 

@@ -38,7 +38,7 @@ struct OnboardingFinalPageView: View {
                     .background(Color.tradeGreen)
                     .clipShape(.rect(cornerRadius: 14))
             }
-            .accessibilityLabel("Get started with TradeGuru")
+            .accessibilityLabel(Text(verbatim: "Get started with TradeGuru"))
             .padding(.horizontal, 40)
 
             Button(action: onSignIn) {
@@ -46,7 +46,7 @@ struct OnboardingFinalPageView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(Color.tradeTextSecondary)
             }
-            .accessibilityLabel("Sign in to existing account")
+            .accessibilityLabel(Text(verbatim: "Sign in to existing account"))
             .padding(.top, 12)
             .padding(.bottom, 16)
         }

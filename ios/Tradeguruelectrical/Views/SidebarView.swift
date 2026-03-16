@@ -60,7 +60,7 @@ struct SidebarView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(Color.tradeTextSecondary)
                     }
-                    .accessibilityLabel("Clear search")
+                    .accessibilityLabel(Text(verbatim: "Clear search"))
                 }
             }
             .padding(8)
@@ -76,7 +76,7 @@ struct SidebarView: View {
                     } label: {
                         conversationRow(conversation)
                     }
-                    .accessibilityLabel(conversation.title)
+                    .accessibilityLabel(Text(verbatim: conversation.title))
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 }
@@ -102,7 +102,7 @@ struct SidebarView: View {
                     .background(Color.tradeGreen)
                     .clipShape(.rect(cornerRadius: 12))
             }
-            .accessibilityLabel("Start new conversation")
+            .accessibilityLabel(Text(verbatim: "Start new conversation"))
             .padding(16)
         }
     }
@@ -123,7 +123,7 @@ struct SidebarView: View {
                     .foregroundStyle(Color.tradeTextSecondary)
                     .frame(width: 44, height: 44)
             }
-            .accessibilityLabel("Close menu")
+            .accessibilityLabel(Text(verbatim: "Close menu"))
         }
     }
 

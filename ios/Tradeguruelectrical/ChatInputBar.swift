@@ -77,15 +77,15 @@ struct ChatInputBar: View {
                             Button {
                                 showCamera = true
                             } label: {
-                                Label("Take Photo", systemImage: "camera")
+                                Label { Text(verbatim: "Take Photo") } icon: { Image(systemName: "camera") }
                             }
                             PhotosPicker(selection: $selectedItem, matching: .any(of: [.images, .videos])) {
-                                Label("Photo Library", systemImage: "photo")
+                                Label { Text(verbatim: "Photo Library") } icon: { Image(systemName: "photo") }
                             }
                             Button {
                                 showDocumentPicker = true
                             } label: {
-                                Label("Browse Files", systemImage: "doc")
+                                Label { Text(verbatim: "Browse Files") } icon: { Image(systemName: "doc") }
                             }
                         } label: {
                             Image(systemName: "plus")
@@ -95,7 +95,7 @@ struct ChatInputBar: View {
                                 .background(Color.tradeInput)
                                 .clipShape(Circle())
                         }
-                        .accessibilityLabel("Attach file")
+                        .accessibilityLabel(Text(verbatim: "Attach file"))
                         .padding(.leading, 12)
                         .onChange(of: selectedItem) { _, newItem in
                             if newItem != nil {
@@ -147,7 +147,7 @@ struct ChatInputBar: View {
                         }
                     }
 
-                    TextField("Ask TradeGuru", text: $text, axis: .vertical)
+                    TextField(text: $text, prompt: Text(verbatim: "Ask TradeGuru"), axis: .vertical) {}
                         .focused($inputFocused)
                         .font(.system(size: 16))
                         .lineLimit(1...5)
@@ -187,7 +187,7 @@ struct ChatInputBar: View {
                                 .font(.system(size: 28))
                                 .foregroundStyle(Color.tradeGreen)
                         }
-                        .accessibilityLabel("Send message")
+                        .accessibilityLabel(Text(verbatim: "Send message"))
                         .padding(.trailing, 12)
                         .transition(.scale.combined(with: .opacity))
                     } else if !isRecording {
@@ -199,7 +199,7 @@ struct ChatInputBar: View {
                                 .foregroundStyle(Color.tradeGreen)
                         }
                         .frame(minWidth: 44, minHeight: 44)
-                        .accessibilityLabel("Record voice message")
+                        .accessibilityLabel(Text(verbatim: "Record voice message"))
                         .padding(.trailing, 12)
                         .transition(.scale.combined(with: .opacity))
                     } else {
@@ -216,7 +216,7 @@ struct ChatInputBar: View {
                             }
                         }
                         .frame(minWidth: 44, minHeight: 44)
-                        .accessibilityLabel("Stop recording")
+                        .accessibilityLabel(Text(verbatim: "Stop recording"))
                         .padding(.trailing, 12)
                         .transition(.scale.combined(with: .opacity))
                     }

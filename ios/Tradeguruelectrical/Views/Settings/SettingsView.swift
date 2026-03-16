@@ -105,7 +105,7 @@ struct SettingsView: View {
                 } label: {
                     Text("Sign Out")
                 }
-                .accessibilityLabel("Sign out")
+                .accessibilityLabel(Text(verbatim: "Sign out"))
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Sign In to TradeGuru")
@@ -123,7 +123,7 @@ struct SettingsView: View {
                     Text("Sign In")
                         .foregroundStyle(Color.tradeGreen)
                 }
-                .accessibilityLabel("Sign in to TradeGuru")
+                .accessibilityLabel(Text(verbatim: "Sign in to TradeGuru"))
             }
         }
     }
@@ -136,7 +136,7 @@ struct SettingsView: View {
             } label: {
                 Text("Clear All Conversations")
             }
-            .accessibilityLabel("Clear all conversations")
+            .accessibilityLabel(Text(verbatim: "Clear all conversations"))
         }
     }
 
