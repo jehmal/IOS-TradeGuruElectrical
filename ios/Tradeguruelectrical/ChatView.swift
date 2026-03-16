@@ -63,9 +63,11 @@ struct ChatView: View {
             }
         }
         .onChange(of: selectedMode) { _, newMode in
+            NSLog("[TG] Mode switch: \(newMode.rawValue)")
             userDismissedCard = false
             viewModel.selectedMode = newMode
             showModeCard = true
+            NSLog("[TG] Mode switch complete")
         }
     }
 

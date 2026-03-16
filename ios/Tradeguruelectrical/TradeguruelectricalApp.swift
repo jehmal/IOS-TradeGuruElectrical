@@ -7,6 +7,8 @@ struct TradeguruelectricalApp: App {
     let container: ModelContainer
 
     init() {
+        Self.installCrashHandlers()
+        NSLog("[TG] App init starting — useInMemory: \(Self.shouldUseInMemoryStore())")
         let useInMemory = Self.shouldUseInMemoryStore()
 
         if !useInMemory {
@@ -77,6 +79,18 @@ struct TradeguruelectricalApp: App {
         } catch {
             return try! ModelContainer(for: Conversation.self, migrationPlan: TradeGuruMigrationPlan.self)
         }
+    }
+
+    private static func installCrashHandlers() {
+        NSSetUncaughtExceptionHandler { exception in
+            NSLog("[TG-CRASH] Uncaught exception: \(exception.name.rawValue)")
+            NSLog("[TG-CRASH] Reason: \(exception.reason ?? "nil")")
+            NSLog("[TG-CRASH] Stack: \(exception.callStackSymbols.prefix(10).joined(separator: "\n"))")
+        }
+        signal(SIGABRT) { _ in NSLog("[TG-CRASH] SIGABRT received — likely ICU abort or assertion failure") }
+        signal(SIGSEGV) { _ in NSLog("[TG-CRASH] SIGSEGV received — memory access violation") }
+        signal(SIGBUS) { _ in NSLog("[TG-CRASH] SIGBUS received — bus error") }
+        signal(SIGTRAP) { _ in NSLog("[TG-CRASH] SIGTRAP received — Swift precondition/fatal error") }
     }
 
     private static func canWriteToAppSupport() -> Bool {
