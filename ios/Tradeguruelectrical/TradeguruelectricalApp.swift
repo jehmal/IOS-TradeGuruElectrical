@@ -17,22 +17,30 @@ struct TradeguruelectricalApp: App {
         }
 
         if useInMemory {
-            let inMemory = try! ModelContainer(
-                for: Conversation.self,
-                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-            )
-            self.container = inMemory
+            do {
+                let inMemory = try ModelContainer(
+                    for: Conversation.self,
+                    configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+                )
+                self.container = inMemory
+            } catch {
+                self.container = Self.lastResortContainer()
+            }
         } else {
             do {
                 let container = try ModelContainer(for: Conversation.self)
                 DataMigrator.migrateIfNeeded(context: container.mainContext)
                 self.container = container
             } catch {
-                let fallback = try! ModelContainer(
-                    for: Conversation.self,
-                    configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-                )
-                self.container = fallback
+                do {
+                    let fallback = try ModelContainer(
+                        for: Conversation.self,
+                        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+                    )
+                    self.container = fallback
+                } catch {
+                    self.container = Self.lastResortContainer()
+                }
             }
         }
         Task { await AuthManager.shared.restoreSession() }
@@ -55,6 +63,17 @@ struct TradeguruelectricalApp: App {
             return true
         }
         return false
+    }
+
+    private static func lastResortContainer() -> ModelContainer {
+        do {
+            return try ModelContainer(
+                for: Conversation.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+        } catch {
+            return try! ModelContainer(for: Conversation.self)
+        }
     }
 
     private static func canWriteToAppSupport() -> Bool {

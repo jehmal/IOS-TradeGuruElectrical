@@ -48,19 +48,23 @@ enum StreamParser {
                 var currentEvent = ""
                 var currentData = ""
 
-                for try await line in lines {
-                    if line.hasPrefix("event: ") {
-                        currentEvent = String(line.dropFirst(7))
-                    } else if line.hasPrefix("data: ") {
-                        currentData = String(line.dropFirst(6))
-                    } else if line.isEmpty, !currentEvent.isEmpty {
-                        let result = processEvent(event: currentEvent, data: currentData)
-                        if let result {
-                            continuation.yield(result)
+                do {
+                    for try await line in lines {
+                        if line.hasPrefix("event: ") {
+                            currentEvent = String(line.dropFirst(7))
+                        } else if line.hasPrefix("data: ") {
+                            currentData = String(line.dropFirst(6))
+                        } else if line.isEmpty, !currentEvent.isEmpty {
+                            let result = processEvent(event: currentEvent, data: currentData)
+                            if let result {
+                                continuation.yield(result)
+                            }
+                            currentEvent = ""
+                            currentData = ""
                         }
-                        currentEvent = ""
-                        currentData = ""
                     }
+                } catch {
+                    continuation.yield(.error(StreamErrorPayload(code: "STREAM_ERROR", message: error.localizedDescription, partial: !currentData.isEmpty)))
                 }
 
                 continuation.finish()

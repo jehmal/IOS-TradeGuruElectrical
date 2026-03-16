@@ -124,8 +124,19 @@ enum TradeGuruAPI {
 
                     let (bytes, response) = try await URLSession.shared.bytes(for: req)
 
-                    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                        continuation.yield(.error(StreamErrorPayload(code: "HTTP_ERROR", message: "Vision request failed", partial: nil)))
+                    guard let http = response as? HTTPURLResponse else {
+                        continuation.yield(.error(StreamErrorPayload(code: "NO_RESPONSE", message: "No HTTP response", partial: nil)))
+                        continuation.finish()
+                        return
+                    }
+
+                    guard http.statusCode == 200 else {
+                        let errorBody = await collectErrorBody(bytes)
+                        continuation.yield(.error(StreamErrorPayload(
+                            code: "HTTP_\(http.statusCode)",
+                            message: errorBody,
+                            partial: nil
+                        )))
                         continuation.finish()
                         return
                     }

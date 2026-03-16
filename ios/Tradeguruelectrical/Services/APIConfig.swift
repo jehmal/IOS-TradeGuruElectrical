@@ -5,6 +5,9 @@ nonisolated enum APIConfig: Sendable {
     nonisolated(unsafe) static var useMockData = false
     #endif
     static let baseURL = "https://tradeguru.com.au/api/v1"
+    static let baseURLValue: URL = URL(string: baseURL)
+        ?? URL(string: "https://tradeguru.com.au")
+        ?? URL(filePath: "/")
     static let platform = "ios"
     static let appVersion = "1.0.0"
     static let workosClientId = "client_01JWQK8QD9RJVTCTMR8ACE9CKB"
@@ -13,7 +16,7 @@ nonisolated enum APIConfig: Sendable {
 
     static func url(_ path: String) -> URL {
         let clean = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        return URL(string: "\(baseURL)/\(clean)") ?? URL(string: baseURL)!
+        return URL(string: "\(baseURL)/\(clean)") ?? baseURLValue
     }
 
     static func headers(deviceId: String, jwt: String? = nil) -> [String: String] {

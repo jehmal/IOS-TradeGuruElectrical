@@ -8,6 +8,17 @@ struct SidebarView: View {
     let onClose: () -> Void
     @State private var searchText = ""
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "MMM d, yyyy"
+        return f
+    }()
+
+    private static func formatDate(_ date: Date) -> String {
+        dateFormatter.string(from: date)
+    }
+
     private var filteredConversations: [Conversation] {
         if searchText.isEmpty { return conversations }
         let lowered = searchText.lowercased()
@@ -128,7 +139,7 @@ struct SidebarView: View {
                     .foregroundStyle(Color.tradeText)
                     .lineLimit(1)
 
-                Text(conversation.updatedAt, style: .date)
+                Text(Self.formatDate(conversation.updatedAt))
                     .font(.system(size: 12))
                     .foregroundStyle(Color.tradeTextSecondary)
 

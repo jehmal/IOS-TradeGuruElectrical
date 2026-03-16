@@ -440,6 +440,7 @@ class ChatViewModel {
                 DeviceManager.save(registeredId)
                 deviceId = registeredId
             } catch {
+                error = "Device registration failed. Retrying on next launch."
             }
         }
     }

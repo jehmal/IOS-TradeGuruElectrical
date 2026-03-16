@@ -9,6 +9,7 @@ class AuthManager {
     var authState: AuthState = .anonymous
     var tier: UserTier = .free
     var tokens: AuthTokens?
+    var authError: String?
 
     var currentUser: AuthUser? {
         if case .authenticated(let user) = authState { return user }
@@ -24,6 +25,7 @@ class AuthManager {
     private init() {}
 
     func signIn(provider: String?) async {
+        authError = nil
         let verifier = PKCEHelper.generateVerifier()
         let challenge = PKCEHelper.generateChallenge(from: verifier)
         pendingVerifier = verifier
@@ -84,7 +86,9 @@ class AuthManager {
             authState = .authenticated(user: decoded.user)
 
             await linkDevice()
-        } catch {}
+        } catch {
+            authError = "Sign in failed: \(error.localizedDescription)"
+        }
     }
 
     func signOut() {
@@ -175,7 +179,11 @@ class AuthManager {
         ]
         req.httpBody = try JSONEncoder().encode(body)
 
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: body])
+        }
         return try JSONDecoder().decode(TokenResponse.self, from: data)
     }
 
@@ -194,7 +202,11 @@ class AuthManager {
         ]
         req.httpBody = try JSONEncoder().encode(body)
 
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: body])
+        }
         return try JSONDecoder().decode(TokenResponse.self, from: data)
     }
 }

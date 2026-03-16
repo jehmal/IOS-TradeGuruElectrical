@@ -9,6 +9,17 @@ struct MessageBubble: View {
 
     @State private var userRating: Int = 0
 
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
+    private static func formatTime(_ date: Date) -> String {
+        timeFormatter.string(from: date)
+    }
+
     var body: some View {
         VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
             if message.role == .user {
@@ -24,7 +35,7 @@ struct MessageBubble: View {
                         .foregroundStyle(message.mode.color)
                 }
 
-                Text(message.timestamp, style: .time)
+                Text(Self.formatTime(message.timestamp))
                     .font(.system(size: 11))
                     .foregroundStyle(Color.tradeTextSecondary)
             }
