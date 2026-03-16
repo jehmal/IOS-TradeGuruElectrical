@@ -7,9 +7,7 @@ struct ModeSelector: View {
         HStack(spacing: 6) {
             ForEach(ThinkingMode.allCases) { mode in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedMode = mode
-                    }
+                    selectedMode = mode
                 } label: {
                     VStack(spacing: 2) {
                         HStack(spacing: 4) {

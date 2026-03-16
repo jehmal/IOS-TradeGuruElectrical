@@ -84,7 +84,6 @@ struct ChatView: View {
                     .onTapGesture {
                         dismissModeCard()
                     }
-                    .transition(.opacity)
                     .padding(.top, 16)
                 }
 
@@ -163,10 +162,8 @@ struct ChatView: View {
     }
 
     private func dismissModeCard() {
-        withAnimation(.easeOut(duration: 0.15)) {
-            showModeCard = false
-            userDismissedCard = true
-        }
+        showModeCard = false
+        userDismissedCard = true
     }
 }
 
