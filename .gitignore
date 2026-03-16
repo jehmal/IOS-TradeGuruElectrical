@@ -9,3 +9,4 @@ __pycache__/
 .mulch/
 __pycache__/
 *.pyc
+examples/
