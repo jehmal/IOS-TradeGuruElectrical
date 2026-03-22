@@ -897,6 +897,9 @@ body {
         <option value="settings">Settings</option>
         <option value="disclaimer">Safety Disclaimer</option>
         <option value="camera">Camera</option>
+        <optgroup label="TradeGuruModel">
+            <option value="tgm-plc-diagnosis">PLC Input Diagnosis</option>
+        </optgroup>
     </select>
     <div class="sep"></div>
     <button id="themeBtn" onclick="toggleTheme()">&#9790; Dark</button>
@@ -1052,6 +1055,23 @@ const MOCK = {
             ]
         }
     ]
+};
+
+const TGM_SAMPLES = {
+    'tgm-plc-diagnosis': {
+        role:'assistant', mode:0, blocks:[
+            {type:'text', content:'If the PLC input is receiving power but the PLC is not registering output, the issue is likely in the PLC input module or the PLC wiring.'},
+            {type:'step_list', title:'Diagnostic Steps', steps:[
+                'Verify the PLC input module is connected to the correct input terminals',
+                'Check the PLC input fuse or relay is in the ON position',
+                'Inspect the PLC input module wiring for damage or loose connections',
+                'Test the PLC input output with a multimeter to verify output voltage',
+                'Check for any tripped safety relays or overload on the PLC input',
+                'Verify the PLC input fuse is intact and not blown'
+            ]},
+            {type:'callout', content:'If the PLC input is receiving power but not registering output, the PLC is not receiving input from the PLC output module.', style:'info'}
+        ], time:'3:45 PM'
+    }
 };
 
 let currentDevice = 'iphone';
@@ -2306,6 +2326,11 @@ function render() {
             sc.innerHTML = renderCamera();
             break;
         default:
+            if (currentComponent.startsWith('tgm-') && TGM_SAMPLES[currentComponent]) {
+                const sample = TGM_SAMPLES[currentComponent];
+                sc.innerHTML = renderIsolated(htmlMessage(sample, true));
+                break;
+            }
             sc.innerHTML = renderFullChat();
     }
 

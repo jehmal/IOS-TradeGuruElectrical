@@ -1,0 +1,1006 @@
+#!/usr/bin/env python3
+"""
+Generate a blank iOS app mockup HTML workbench.
+
+Usage:
+    python3 generate-mockup --name "MyApp" --accent "#3B82F6" --out ~/Desktop/myapp-preview.html
+    python3 generate-mockup --name "MyApp"  # outputs to ./preview/myapp-mockup.html
+
+Features included:
+    - iPhone 15 Pro / iPad Pro 11" / Apple Watch device frames
+    - Light/Dark mode toggle
+    - Component picker dropdown (empty, ready to populate)
+    - Pen/draw overlay tool with color picker and eraser
+    - Notes panel (persists to localStorage)
+    - Dynamic Island, status bar, home indicator
+    - CSS variable theming system
+    - Block rendering system (text, heading, stepList, warning, code, callout, table, partsList, regulation)
+"""
+
+import argparse
+import os
+import sys
+import re
+
+
+def generate(name: str, accent: str, out_path: str):
+    safe_name = re.sub(r'[^a-zA-Z0-9]', '', name).lower()
+    storage_key = f'{safe_name}_workbench_notes'
+
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{name} — Component Viewer</title>
+<style>
+:root {{
+    --app-accent: {accent};
+    --app-surface: #F7F2F9;
+    --app-input: #EEE9F0;
+    --app-light: #FFFCFF;
+    --app-border: #B8B3BA;
+    --app-text: #242026;
+    --app-text-secondary: #6B7280;
+    --app-bg: #FFFFFF;
+    --status-bar-color: #242026;
+    --material-bg: rgba(255,255,255,0.85);
+}}
+[data-theme="dark"] {{
+    --app-surface: #2F2D32;
+    --app-input: #3D3A40;
+    --app-light: #2F2D32;
+    --app-border: #6B7280;
+    --app-text: #FFFFFF;
+    --app-text-secondary: #9CA3AF;
+    --app-bg: #1A1A1C;
+    --status-bar-color: #FFFFFF;
+    --material-bg: rgba(26,26,28,0.85);
+}}
+* {{ margin:0; padding:0; box-sizing:border-box; }}
+body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}}
+
+/* Controls Bar */
+.controls-bar {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #16213e;
+    border-bottom: 1px solid #0f3460;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 500;
+}}
+.controls-bar label {{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin-right: 4px;
+}}
+.controls-bar select, .controls-bar button {{
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}}
+.controls-bar select:hover, .controls-bar button:hover {{
+    background: #1a4a8a;
+}}
+.controls-bar button.active {{
+    background: #e94560;
+    border-color: #e94560;
+}}
+.sep {{ width:1px; height:24px; background:#333; }}
+
+/* === WORKBENCH: Pen/Draw Overlay === */
+.draw-canvas {{
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 9000;
+    pointer-events: none;
+    cursor: default;
+}}
+.draw-canvas.active {{
+    pointer-events: all;
+    cursor: crosshair;
+}}
+.draw-canvas.eraser-mode {{
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='%23e94560' stroke-width='2'/%3E%3C/svg%3E") 10 10, auto;
+}}
+
+/* === WORKBENCH: Notes Panel === */
+.notes-panel {{
+    position: fixed;
+    top: 48px; right: 0;
+    width: 320px; height: calc(100vh - 48px);
+    background: #16213e;
+    border-left: 1px solid #0f3460;
+    z-index: 8000;
+    display: none;
+    flex-direction: column;
+    font-size: 13px;
+}}
+.notes-panel.visible {{ display: flex; }}
+.notes-panel-header {{
+    padding: 10px 12px;
+    border-bottom: 1px solid #0f3460;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #e0e0e0;
+}}
+.notes-panel-header button {{
+    background: none; border: none; color: #888; cursor: pointer; font-size: 16px;
+}}
+.notes-list {{
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}}
+.note-item {{
+    background: #0f3460;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    position: relative;
+    color: #e0e0e0;
+    font-size: 12px;
+    line-height: 1.4;
+}}
+.note-item .note-time {{
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+}}
+.note-item .note-delete {{
+    position: absolute;
+    top: 4px; right: 6px;
+    background: none; border: none; color: #e94560; cursor: pointer; font-size: 12px;
+    opacity: 0;
+}}
+.note-item:hover .note-delete {{ opacity: 1; }}
+.notes-input-row {{
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    border-top: 1px solid #0f3460;
+}}
+.notes-input-row input {{
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    font-size: 12px;
+    font-family: inherit;
+}}
+.notes-input-row button {{
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #e94560;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+}}
+
+/* === WORKBENCH: Pen toolbar === */
+.pen-toolbar {{
+    position: fixed;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 14px;
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 12px;
+    z-index: 9500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}}
+.pen-toolbar.visible {{ display: flex; }}
+.pen-toolbar .color-btn {{
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+}}
+.pen-toolbar .color-btn.active {{ border-color: #fff; }}
+.pen-toolbar .size-btn {{
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}}
+.pen-toolbar .size-btn.active {{ background: #e94560; border-color: #e94560; }}
+.pen-toolbar .tool-btn {{
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f3460;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+}}
+.pen-toolbar .tool-btn.active {{ background: #e94560; border-color: #e94560; }}
+
+/* Device Area */
+.device-area {{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    overflow: auto;
+}}
+.device-wrap {{
+    position: relative;
+    flex-shrink: 0;
+}}
+.device-label {{
+    text-align: center;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}}
+
+/* Device Frames */
+.device-frame {{
+    background: var(--app-bg);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+}}
+.device-frame.iphone {{
+    width: 393px; height: 852px;
+    border-radius: 47px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 0 0 11px #1A1A1A, 0 0 0 13px #333;
+}}
+.device-frame.ipad {{
+    width: 834px; height: 1194px;
+    border-radius: 18px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.25), 0 0 0 8px #1A1A1A, 0 0 0 10px #333;
+    transform: scale(0.6);
+    transform-origin: center center;
+}}
+.device-frame.watch {{
+    width: 198px; height: 242px;
+    border-radius: 42px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3), 0 0 0 6px #2a2a2a, 0 0 0 8px #444;
+}}
+
+/* Dynamic Island */
+.dynamic-island {{
+    position: absolute;
+    top: 11px; left: 50%;
+    transform: translateX(-50%);
+    width: 126px; height: 37px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 100;
+}}
+.device-frame.ipad .dynamic-island {{ width:90px; height:26px; top:8px; border-radius:14px; }}
+.device-frame.watch .dynamic-island {{ display:none; }}
+
+/* Status Bar */
+.status-bar {{
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--status-bar-color);
+    flex-shrink: 0;
+}}
+.status-bar .icons {{ display:flex; gap:5px; align-items:center; }}
+.device-frame.watch .status-bar {{ height:28px; padding:0 12px 2px; font-size:11px; }}
+.device-frame.watch .status-bar .icons {{ display:none; }}
+
+/* Home Indicator */
+.home-indicator {{
+    width: 134px; height: 5px;
+    background: var(--app-text);
+    opacity: 0.15;
+    border-radius: 3px;
+    margin: 8px auto;
+    flex-shrink: 0;
+}}
+.device-frame.watch .home-indicator {{ display:none; }}
+
+.screen-content {{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}}
+
+/* Nav Bar */
+.nav-bar {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    flex-shrink: 0;
+}}
+.nav-title {{
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--app-text);
+}}
+.device-frame.watch .nav-bar {{ padding:4px 8px; }}
+.device-frame.watch .nav-title {{ font-size:12px; }}
+
+/* Content area */
+.content-area {{
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}}
+.device-frame.watch .content-area {{ padding:8px; gap:6px; }}
+
+/* Empty State */
+.empty-state {{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction: column;
+    gap: 12px;
+}}
+.empty-state-title {{
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--app-text);
+    opacity: 0.3;
+}}
+.empty-state-sub {{
+    font-size: 14px;
+    color: var(--app-text-secondary);
+    opacity: 0.4;
+}}
+.device-frame.watch .empty-state-title {{ font-size:12px; }}
+.device-frame.watch .empty-state-sub {{ font-size:9px; }}
+
+/* Isolated Component View */
+.isolated-component {{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    overflow-y:auto;
+}}
+
+/* ===== Block Styles ===== */
+.block-text {{
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--app-text);
+}}
+.device-frame.watch .block-text {{ font-size:10px; line-height:1.35; }}
+
+.block-heading {{
+    font-weight: 700;
+    color: var(--app-text);
+    margin-bottom: 4px;
+}}
+.block-heading.h1 {{ font-size: 22px; }}
+.block-heading.h2 {{ font-size: 18px; }}
+.block-heading.h3 {{ font-size: 16px; }}
+.device-frame.watch .block-heading.h1 {{ font-size:14px; }}
+.device-frame.watch .block-heading.h2 {{ font-size:12px; }}
+.device-frame.watch .block-heading.h3 {{ font-size:11px; }}
+
+.block-step-list {{
+    background: var(--app-surface);
+    border-radius: 12px;
+    padding: 14px;
+}}
+.step-title {{
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--app-text);
+    margin-bottom: 10px;
+}}
+.step-item {{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}}
+.step-item:last-child {{ margin-bottom: 0; }}
+.step-num {{
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--app-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}}
+.step-text {{
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--app-text);
+    padding-top: 2px;
+}}
+.device-frame.watch .block-step-list {{ padding:8px; border-radius:8px; }}
+.device-frame.watch .step-title {{ font-size:11px; margin-bottom:6px; }}
+.device-frame.watch .step-num {{ width:16px; height:16px; font-size:9px; }}
+.device-frame.watch .step-text {{ font-size:9px; }}
+.device-frame.watch .step-item {{ gap:6px; margin-bottom:6px; }}
+
+.block-warning {{
+    background: rgba(239,68,68,0.08);
+    border-left: 3px solid #EF4444;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}}
+.warning-icon {{
+    font-size: 18px;
+    flex-shrink: 0;
+    line-height: 1;
+}}
+.warning-text {{
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--app-text);
+}}
+.device-frame.watch .block-warning {{ padding:6px; gap:6px; }}
+.device-frame.watch .warning-icon {{ font-size:12px; }}
+.device-frame.watch .warning-text {{ font-size:9px; }}
+
+.block-code {{
+    background: #1E1E1E;
+    border-radius: 10px;
+    padding: 14px;
+    position: relative;
+    overflow-x: auto;
+}}
+.code-lang {{
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+}}
+.code-content {{
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #D4D4D4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}}
+.device-frame.watch .block-code {{ padding:6px; border-radius:6px; }}
+.device-frame.watch .code-content {{ font-size:8px; line-height:1.3; }}
+
+.block-callout {{
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}}
+.block-callout.callout-tip {{
+    background: rgba(16,185,129,0.08);
+    border-left: 3px solid #10B981;
+}}
+.block-callout.callout-info {{
+    background: rgba(59,130,246,0.08);
+    border-left: 3px solid #3B82F6;
+}}
+.block-callout.callout-important {{
+    background: rgba(245,158,11,0.08);
+    border-left: 3px solid #F59E0B;
+}}
+.callout-icon {{
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1;
+}}
+.callout-text {{
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--app-text);
+}}
+.device-frame.watch .block-callout {{ padding:6px; gap:6px; }}
+.device-frame.watch .callout-icon {{ font-size:11px; }}
+.device-frame.watch .callout-text {{ font-size:9px; }}
+
+.block-table {{
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--app-border);
+}}
+.block-table table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}}
+.block-table th {{
+    background: var(--app-surface);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--app-text);
+    border-bottom: 1px solid var(--app-border);
+}}
+.block-table td {{
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--app-border);
+    color: var(--app-text);
+}}
+.block-table tr:last-child td {{ border-bottom: none; }}
+.device-frame.watch .block-table {{ font-size:9px; }}
+.device-frame.watch .block-table th, .device-frame.watch .block-table td {{ padding:4px 6px; }}
+
+.block-parts {{
+    border-radius: 10px;
+    border: 1px solid var(--app-border);
+    overflow: hidden;
+}}
+.parts-title {{
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--app-text);
+    background: var(--app-surface);
+    border-bottom: 1px solid var(--app-border);
+}}
+.block-parts table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}}
+.block-parts th {{
+    padding: 6px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--app-text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--app-border);
+}}
+.block-parts td {{
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--app-border);
+    color: var(--app-text);
+}}
+.block-parts tr:last-child td {{ border-bottom: none; }}
+
+.block-regulation {{
+    background: var(--app-surface);
+    border-radius: 10px;
+    padding: 12px;
+    border-left: 3px solid var(--app-accent);
+}}
+.reg-code {{
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--app-accent);
+    margin-bottom: 2px;
+}}
+.reg-clause {{
+    font-size: 12px;
+    color: var(--app-text-secondary);
+    margin-bottom: 6px;
+}}
+.reg-summary {{
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--app-text);
+}}
+.device-frame.watch .block-regulation {{ padding:6px; }}
+.device-frame.watch .reg-code {{ font-size:10px; }}
+.device-frame.watch .reg-clause {{ font-size:9px; }}
+.device-frame.watch .reg-summary {{ font-size:9px; }}
+
+/* Message Bubbles */
+.msg-row {{ display:flex; flex-direction:column; }}
+.msg-row.user {{ align-items:flex-end; }}
+.msg-bubble-user {{
+    background: var(--app-accent);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 18px 18px 4px 18px;
+    max-width: 85%;
+    font-size: 15px;
+    line-height: 1.45;
+}}
+.msg-bubble-assistant {{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 95%;
+}}
+.device-frame.watch .msg-bubble-user {{ padding:6px 8px; font-size:10px; border-radius:12px 12px 2px 12px; }}
+.device-frame.watch .msg-bubble-assistant {{ gap:6px; }}
+.messages-list {{
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}}
+.device-frame.watch .messages-list {{ padding:4px 8px; gap:8px; }}
+</style>
+</head>
+<body>
+<!-- Workbench: Draw Canvas -->
+<canvas class="draw-canvas" id="drawCanvas"></canvas>
+
+<!-- Workbench: Controls Bar -->
+<div class="controls-bar">
+    <label>Device</label>
+    <select id="deviceSelect" onchange="setDevice(this.value)">
+        <option value="iphone">iPhone 15 Pro (393x852)</option>
+        <option value="ipad">iPad Pro 11" (834x1194)</option>
+        <option value="watch">Apple Watch (198x242)</option>
+    </select>
+    <div class="sep"></div>
+    <label>Component</label>
+    <select id="componentSelect" onchange="setComponent(this.value)">
+        <option value="empty-state">Empty State</option>
+        <!-- Add your components here as <option> or <optgroup> -->
+    </select>
+    <div class="sep"></div>
+    <button id="themeBtn" onclick="toggleTheme()">&#9790; Dark</button>
+    <div class="sep"></div>
+    <span style="color:#666;font-size:10px;letter-spacing:0.5px;text-transform:uppercase">Workbench</span>
+    <button id="penBtn" onclick="togglePen()">&#9998; Pen</button>
+    <button id="notesBtn" onclick="toggleNotes()">&#128221; Notes</button>
+</div>
+
+<div class="device-area">
+    <div class="device-wrap">
+        <div class="device-frame iphone" id="deviceFrame">
+            <div class="dynamic-island"></div>
+            <div class="status-bar">
+                <span>9:41</span>
+                <span class="icons">
+                    <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="4" width="3" height="8" rx="0.5" fill="currentColor"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="0.5" fill="currentColor"/><rect x="9" y="1" width="3" height="11" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor"/></svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 3.6C9.8 3.6 11.4 4.3 12.6 5.5L14.1 4C12.5 2.4 10.4 1.4 8 1.4C5.6 1.4 3.5 2.4 1.9 4L3.4 5.5C4.6 4.3 6.2 3.6 8 3.6Z" fill="currentColor"/><path d="M8 6.8C9.1 6.8 10 7.2 10.8 7.8L12.2 6.3C11 5.3 9.6 4.6 8 4.6C6.4 4.6 5 5.3 3.8 6.3L5.2 7.8C6 7.2 6.9 6.8 8 6.8Z" fill="currentColor"/><circle cx="8" cy="10.5" r="1.5" fill="currentColor"/></svg>
+                    <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="21" height="10" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="2.5" width="18" height="7" rx="1" fill="currentColor"/><rect x="22" y="4" width="2" height="4" rx="0.5" fill="currentColor"/></svg>
+                </span>
+            </div>
+            <div class="screen-content" id="screenContent">
+            </div>
+            <div class="home-indicator"></div>
+        </div>
+        <div class="device-label" id="deviceLabel">iPhone 15 Pro &mdash; 393 &times; 852</div>
+    </div>
+</div>
+
+<script>
+// ===== App Config =====
+const APP_NAME = '{name}';
+
+// ===== State =====
+let currentDevice = 'iphone';
+let currentComponent = 'empty-state';
+let isDark = false;
+
+// ===== Helpers =====
+function esc(s) {{
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
+}}
+
+// ===== Block Renderer =====
+function htmlBlock(block) {{
+    switch(block.type) {{
+        case 'text':
+            return `<div class="block-text">${{esc(block.content)}}</div>`;
+        case 'heading':
+            const hl = block.level || 2;
+            return `<div class="block-heading h${{hl}}">${{esc(block.content)}}</div>`;
+        case 'stepList':
+        case 'step_list':
+            return `<div class="block-step-list">
+                ${{block.title?`<div class="step-title">${{esc(block.title)}}</div>`:''}}
+                ${{(block.steps||[]).map((s,i) => `<div class="step-item">
+                    <div class="step-num">${{i+1}}</div>
+                    <div class="step-body"><div class="step-text">${{esc(typeof s === 'string' ? s : s.instruction || s.text || '')}}</div></div>
+                </div>`).join('')}}
+            </div>`;
+        case 'warning':
+            return `<div class="block-warning">
+                <div class="warning-icon">&#9888;&#65039;</div>
+                <div class="warning-text">${{esc(block.content)}}</div>
+            </div>`;
+        case 'code':
+            return `<div class="block-code">
+                ${{block.language?`<div class="code-lang">${{esc(block.language)}}</div>`:''}}
+                <div class="code-content">${{esc(block.content)}}</div>
+            </div>`;
+        case 'callout':
+            const cStyle = block.style || 'info';
+            const cIcons = {{tip:'\\u2705', info:'\\u2139\\uFE0F', important:'\\u26A0\\uFE0F'}};
+            return `<div class="block-callout callout-${{cStyle}}">
+                <div class="callout-icon">${{cIcons[cStyle]||''}}</div>
+                <div class="callout-text">${{esc(block.content)}}</div>
+            </div>`;
+        case 'table':
+            return `<div class="block-table"><table>
+                <thead><tr>${{(block.headers||[]).map(h=>`<th>${{esc(h)}}</th>`).join('')}}</tr></thead>
+                <tbody>${{(block.rows||[]).map(r=>`<tr>${{r.map(c=>`<td>${{esc(c)}}</td>`).join('')}}</tr>`).join('')}}</tbody>
+            </table></div>`;
+        case 'partsList':
+        case 'parts_list':
+            return `<div class="block-parts">
+                ${{block.title?`<div class="parts-title">${{esc(block.title)}}</div>`:''}}
+                <table>
+                    <thead><tr><th>Item</th><th>Specification</th><th>Qty</th></tr></thead>
+                    <tbody>${{(block.items||[]).map(it=>`<tr><td>${{esc(it.name)}}</td><td>${{esc(it.spec)}}</td><td>${{it.qty}}</td></tr>`).join('')}}</tbody>
+                </table>
+            </div>`;
+        case 'regulation':
+            return `<div class="block-regulation">
+                <div class="reg-code">${{esc(block.code)}}</div>
+                <div class="reg-clause">${{esc(block.clause)}}</div>
+                <div class="reg-summary">${{esc(block.summary||block.content)}}</div>
+            </div>`;
+        default:
+            return `<div class="block-text">${{esc(block.content||JSON.stringify(block))}}</div>`;
+    }}
+}}
+
+// ===== Message Renderer =====
+function htmlMessage(msg) {{
+    if (msg.role === 'user') {{
+        return `<div class="msg-row user"><div class="msg-bubble-user">${{msg.blocks.map(htmlBlock).join('')}}</div></div>`;
+    }}
+    return `<div class="msg-row"><div class="msg-bubble-assistant">${{msg.blocks.map(htmlBlock).join('')}}</div></div>`;
+}}
+
+// ===== Nav Bar =====
+function htmlNavBar() {{
+    return `<div class="nav-bar"><div class="nav-title">${{APP_NAME}}</div></div>`;
+}}
+
+// ===== Render Isolated Component =====
+function renderIsolated(html) {{
+    return `${{htmlNavBar()}}<div class="isolated-component"><div style="width:100%">${{html}}</div></div>`;
+}}
+
+// ===== Main Render =====
+function render() {{
+    const sc = document.getElementById('screenContent');
+    switch(currentComponent) {{
+        case 'empty-state':
+            sc.innerHTML = `${{htmlNavBar()}}<div class="empty-state"><div class="empty-state-title">${{APP_NAME}}</div><div class="empty-state-sub">Select a component to preview</div></div>`;
+            break;
+        default:
+            sc.innerHTML = `${{htmlNavBar()}}<div class="empty-state"><div class="empty-state-sub">Component "${{currentComponent}}" not found</div></div>`;
+    }}
+}}
+
+// ===== Device / Theme / Component =====
+function setDevice(type) {{
+    currentDevice = type;
+    const frame = document.getElementById('deviceFrame');
+    frame.className = 'device-frame ' + type;
+    const labels = {{ iphone:'iPhone 15 Pro \\u2014 393 \\u00D7 852', ipad:'iPad Pro 11" \\u2014 834 \\u00D7 1194 (scaled 60%)', watch:'Apple Watch \\u2014 198 \\u00D7 242' }};
+    document.getElementById('deviceLabel').innerHTML = labels[type] || '';
+    render();
+}}
+
+function setComponent(comp) {{
+    currentComponent = comp;
+    render();
+}}
+
+function toggleTheme() {{
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeBtn').innerHTML = isDark ? '&#9788; Light' : '&#9790; Dark';
+    document.getElementById('themeBtn').classList.toggle('active', isDark);
+    render();
+}}
+
+// ===== Pen / Draw =====
+const drawCanvas = document.getElementById('drawCanvas');
+const drawCtx = drawCanvas.getContext('2d');
+let penActive = false, eraserMode = false, isDrawing = false;
+let penColor = '#e94560', penSize = 3;
+
+function resizeCanvas() {{
+    drawCanvas.width = window.innerWidth;
+    drawCanvas.height = window.innerHeight;
+}}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+drawCanvas.addEventListener('mousedown', (e) => {{ isDrawing = true; drawCtx.beginPath(); drawCtx.moveTo(e.clientX, e.clientY); }});
+drawCanvas.addEventListener('mousemove', (e) => {{
+    if (!isDrawing) return;
+    if (eraserMode) {{
+        drawCtx.globalCompositeOperation = 'destination-out';
+        drawCtx.lineWidth = penSize * 4;
+    }} else {{
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.lineWidth = penSize;
+    }}
+    drawCtx.strokeStyle = penColor;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+    drawCtx.lineTo(e.clientX, e.clientY);
+    drawCtx.stroke();
+}});
+drawCanvas.addEventListener('mouseup', () => {{ isDrawing = false; }});
+drawCanvas.addEventListener('mouseleave', () => {{ isDrawing = false; }});
+
+function togglePen() {{
+    penActive = !penActive;
+    eraserMode = false;
+    drawCanvas.classList.toggle('active', penActive);
+    drawCanvas.classList.remove('eraser-mode');
+    document.getElementById('penBtn').classList.toggle('active', penActive);
+    document.querySelector('.pen-toolbar').classList.toggle('visible', penActive);
+}}
+
+function toggleEraser() {{
+    eraserMode = !eraserMode;
+    drawCanvas.classList.toggle('eraser-mode', eraserMode);
+    document.getElementById('eraserBtn').classList.toggle('active', eraserMode);
+}}
+
+function clearDrawing() {{
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+}}
+
+function setPenColor(color, btn) {{
+    penColor = color;
+    eraserMode = false;
+    drawCanvas.classList.remove('eraser-mode');
+    document.querySelectorAll('.pen-toolbar .color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}}
+
+function setPenSize(size, btn) {{
+    penSize = size;
+    document.querySelectorAll('.pen-toolbar .size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}}
+
+// ===== Notes Panel =====
+let notes = JSON.parse(localStorage.getItem('{storage_key}') || '[]');
+let notesVisible = false;
+
+function toggleNotes() {{
+    notesVisible = !notesVisible;
+    document.getElementById('notesPanel').classList.toggle('visible', notesVisible);
+    document.getElementById('notesBtn').classList.toggle('active', notesVisible);
+    renderNotes();
+}}
+
+function renderNotes() {{
+    const list = document.getElementById('notesList');
+    if (!list) return;
+    list.innerHTML = notes.map((n, i) =>
+        `<div class="note-item">
+            <button class="note-delete" onclick="deleteNote(${{i}})">\\u00D7</button>
+            ${{n.text}}
+            <div class="note-time">${{n.time}}</div>
+        </div>`
+    ).join('') || '<div style="color:#666;padding:20px;text-align:center">No notes yet</div>';
+}}
+
+function addNote() {{
+    const input = document.getElementById('noteInput');
+    if (!input.value.trim()) return;
+    notes.unshift({{ text: input.value.trim(), time: new Date().toLocaleString() }});
+    localStorage.setItem('{storage_key}', JSON.stringify(notes));
+    input.value = '';
+    renderNotes();
+}}
+
+function deleteNote(i) {{
+    notes.splice(i, 1);
+    localStorage.setItem('{storage_key}', JSON.stringify(notes));
+    renderNotes();
+}}
+
+document.getElementById('noteInput')?.addEventListener('keydown', (e) => {{
+    if (e.key === 'Enter') addNote();
+}});
+
+// Initial render
+render();
+</script>
+
+<!-- Workbench: Pen Toolbar (floating, bottom center) -->
+<div class="pen-toolbar" id="penToolbar">
+    <span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:0.5px">Pen</span>
+    <button class="color-btn active" style="background:#e94560" onclick="setPenColor('#e94560',this)"></button>
+    <button class="color-btn" style="background:#3b82f6" onclick="setPenColor('#3b82f6',this)"></button>
+    <button class="color-btn" style="background:{accent}" onclick="setPenColor('{accent}',this)"></button>
+    <button class="color-btn" style="background:#FBBF24" onclick="setPenColor('#FBBF24',this)"></button>
+    <button class="color-btn" style="background:#fff" onclick="setPenColor('#ffffff',this)"></button>
+    <div class="sep"></div>
+    <button class="size-btn" onclick="setPenSize(2,this)">S</button>
+    <button class="size-btn active" onclick="setPenSize(3,this)">M</button>
+    <button class="size-btn" onclick="setPenSize(6,this)">L</button>
+    <div class="sep"></div>
+    <button class="tool-btn" id="eraserBtn" onclick="toggleEraser()">Eraser</button>
+    <button class="tool-btn" onclick="clearDrawing()">Clear</button>
+</div>
+
+<!-- Workbench: Notes Panel (right sidebar) -->
+<div class="notes-panel" id="notesPanel">
+    <div class="notes-panel-header">
+        <span>Design Notes</span>
+        <button onclick="toggleNotes()">&times;</button>
+    </div>
+    <div class="notes-list" id="notesList"></div>
+    <div class="notes-input-row">
+        <input id="noteInput" type="text" placeholder="Add a note..." />
+        <button onclick="addNote()">Add</button>
+    </div>
+</div>
+</body>
+</html>'''
+
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    print(f'Generated: {os.path.abspath(out_path)}')
+    print(f'App name:  {name}')
+    print(f'Accent:    {accent}')
+    print(f'Features:  iPhone/iPad/Watch frames, light/dark, pen tool, notes panel, block renderer')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate a blank iOS app mockup HTML workbench')
+    parser.add_argument('--name', required=True, help='App name (shown in title and nav bar)')
+    parser.add_argument('--accent', default='#3B82F6', help='Accent color hex (default: #3B82F6 blue)')
+    parser.add_argument('--out', default=None, help='Output file path (default: ./preview/<name>-mockup.html)')
+    args = parser.parse_args()
+
+    if args.out is None:
+        safe = re.sub(r'[^a-zA-Z0-9]', '', args.name).lower()
+        args.out = os.path.join('preview', f'{safe}-mockup.html')
+
+    generate(args.name, args.accent, args.out)
