@@ -152,7 +152,12 @@ fun NavGraph(
                 tier = tier,
                 appVersion = appVersion,
                 onSignIn = { navController.navigate(Routes.SIGN_IN) },
-                onSignOut = { appModule.authManager.signOut() },
+                onSignOut = {
+                    appModule.authManager.signOut()
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onClearConversations = {
                     scope.launch { appModule.conversationManager.clearAllConversations() }
                 },
