@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
@@ -85,15 +86,13 @@ fun ChatScreen(
             )
         }
     ) {
-        Box(modifier = Modifier.fillMaxSize().background(colors.tradeBg)) {
+        Box(modifier = Modifier.fillMaxSize().background(colors.tradeBg).statusBarsPadding()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 ChatNavBar(
                     onMenuTap = { scope.launch { drawerState.open() } },
                     onSettingsTap = onNavigateToSettings,
                     onNewChat = { viewModel.newConversation(selectedMode) },
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .background(colors.tradeBg)
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
 
                 ConversationArea(

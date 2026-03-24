@@ -1,6 +1,7 @@
 package com.tradeguru.electrical.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
 object Routes {
+    const val LOGIN = "login"
     const val ONBOARDING = "onboarding"
     const val DISCLAIMER = "disclaimer"
     const val CHAT = "chat"
@@ -35,19 +37,25 @@ fun NavGraph(
     appModule: AppModule,
     navController: NavHostController = rememberNavController()
 ) {
+    val authState by appModule.authManager.authState.collectAsState()
     val hasCompletedOnboarding by appModule.preferencesManager.hasCompletedOnboarding
         .collectAsState(initial = null)
     val hasAcceptedDisclaimer by appModule.preferencesManager.hasAcceptedDisclaimer
         .collectAsState(initial = null)
+    val hasSkippedLogin by appModule.preferencesManager.hasSkippedLogin
+        .collectAsState(initial = null)
 
     val onboardingDone = hasCompletedOnboarding
     val disclaimerDone = hasAcceptedDisclaimer
+    val loginSkipped = hasSkippedLogin
 
-    if (onboardingDone == null || disclaimerDone == null) {
+    if (onboardingDone == null || disclaimerDone == null || loginSkipped == null) {
         return
     }
 
+    val isLoggedIn = authState is AuthState.Authenticated
     val startDestination = when {
+        !isLoggedIn && !loginSkipped -> Routes.LOGIN
         !onboardingDone -> Routes.ONBOARDING
         !disclaimerDone -> Routes.DISCLAIMER
         else -> Routes.CHAT
@@ -59,6 +67,35 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Routes.LOGIN) {
+            val context = LocalContext.current
+            val loginAuthState by appModule.authManager.authState.collectAsState()
+            LaunchedEffect(loginAuthState) {
+                if (loginAuthState is AuthState.Authenticated) {
+                    navController.navigate(Routes.ONBOARDING) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            }
+            SignInView(
+                onGoogleSignIn = {
+                    appModule.authManager.startSignIn(context, "GoogleOAuth")
+                },
+                onAppleSignIn = {
+                    appModule.authManager.startSignIn(context, "AppleOAuth")
+                },
+                onEmailSignIn = {
+                    appModule.authManager.startSignIn(context)
+                },
+                onDismiss = {
+                    scope.launch { appModule.preferencesManager.setSkippedLogin(true) }
+                    navController.navigate(Routes.ONBOARDING) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onComplete = {

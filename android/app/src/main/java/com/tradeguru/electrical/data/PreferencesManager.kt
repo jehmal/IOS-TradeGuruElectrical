@@ -15,6 +15,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "tr
 object PrefsKeys {
     val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
     val HAS_ACCEPTED_DISCLAIMER = booleanPreferencesKey("has_accepted_disclaimer")
+    val HAS_SKIPPED_LOGIN = booleanPreferencesKey("has_skipped_login")
     val SELECTED_MODE = stringPreferencesKey("selected_mode")
 }
 
@@ -25,6 +26,9 @@ class PreferencesManager(private val context: Context) {
 
     val hasAcceptedDisclaimer: Flow<Boolean> = context.dataStore.data
         .map { prefs -> prefs[PrefsKeys.HAS_ACCEPTED_DISCLAIMER] ?: false }
+
+    val hasSkippedLogin: Flow<Boolean> = context.dataStore.data
+        .map { prefs -> prefs[PrefsKeys.HAS_SKIPPED_LOGIN] ?: false }
 
     val selectedMode: Flow<String> = context.dataStore.data
         .map { prefs -> prefs[PrefsKeys.SELECTED_MODE] ?: "fault_finder" }
@@ -38,6 +42,12 @@ class PreferencesManager(private val context: Context) {
     suspend fun setDisclaimerAccepted(accepted: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[PrefsKeys.HAS_ACCEPTED_DISCLAIMER] = accepted
+        }
+    }
+
+    suspend fun setSkippedLogin(skipped: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[PrefsKeys.HAS_SKIPPED_LOGIN] = skipped
         }
     }
 

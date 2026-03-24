@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -70,7 +71,7 @@ fun SidebarView(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)).clickable(onClick = onClose))
-        Column(Modifier.width(300.dp).fillMaxHeight().background(colors.tradeBg)) {
+        Column(Modifier.width(300.dp).fillMaxHeight().background(colors.tradeBg).statusBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Conversations", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = colors.tradeText)
                 IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {

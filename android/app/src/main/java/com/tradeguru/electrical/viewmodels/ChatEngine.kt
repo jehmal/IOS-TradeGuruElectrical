@@ -275,17 +275,15 @@ class ChatEngine(
     }
 
     fun registerDeviceIfNeeded() {
-        if (deviceId.isEmpty() || deviceId == "pending") {
-            scope.launch {
-                try {
-                    val newDeviceId = withContext(Dispatchers.IO) {
-                        TradeGuruAPI.registerDevice()
-                    }
-                    deviceManager.getOrCreateDeviceId()
-                    deviceId = newDeviceId
-                } catch (_: Exception) {
-                    _error.value = "Device registration failed. Retrying on next launch."
+        scope.launch {
+            try {
+                val newDeviceId = withContext(Dispatchers.IO) {
+                    TradeGuruAPI.registerDevice()
                 }
+                deviceManager.save(newDeviceId)
+                deviceId = newDeviceId
+            } catch (e: Exception) {
+                android.util.Log.w("ChatEngine", "Device registration failed: ${e.message}")
             }
         }
     }

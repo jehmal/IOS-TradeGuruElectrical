@@ -2,6 +2,8 @@ package com.tradeguru.electrical.ui.views.chat
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -29,6 +31,8 @@ fun ChatNavBar(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
     ) {
         IconButton(
             onClick = onMenuTap,
@@ -40,7 +44,7 @@ fun ChatNavBar(
                 imageVector = Icons.Default.Menu,
                 contentDescription = null,
                 tint = colors.tradeText,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -56,7 +60,7 @@ fun ChatNavBar(
                 imageVector = Icons.Default.Settings,
                 contentDescription = null,
                 tint = colors.tradeText,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -70,7 +74,7 @@ fun ChatNavBar(
                 imageVector = Icons.Default.Create,
                 contentDescription = null,
                 tint = colors.tradeText,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
     }
