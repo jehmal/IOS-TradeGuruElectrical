@@ -221,3 +221,40 @@ tradeguru generate-asset --prompt "..." --name hero_banner
 tradeguru generate-icon --prompt "..." --app-path ios
 tradeguru generate-screenshot --prompt "..." --app-path ios --device iphone
 ```
+
+## O&P Workflow Rules
+
+The O&P workflow (`autoresearch/oandp/`) enforces a file-contract pipeline. Use `/oandp-task <description>` as the entry point.
+
+### Run Initialization
+Every task begins with `python3 autoresearch/oandp/runner.py new "request"`. The runner creates the directory structure and request.md.
+
+### Mandatory File Trail
+Every run produces these 5 files:
+- `00_request.json` — structured request
+- `01_intake.json` — scope, success metrics, done definition
+- `01a_workflow_resolution.json` — profile selection, materialized steps, skip reasons
+- `05_execute.json` — change manifest, artifact manifest
+- `06_review.json` — quality measurement (spec_compliance + regression)
+
+### Two-Agent Gate
+Agent A (intake) and Agent B (judge) independently assess the 6 routing drivers and propose a profile. Agreement proceeds. Disagreement halts for human decision.
+
+### Step Validation
+Run `python3 autoresearch/oandp/runner.py validate <run_dir> <step_file>` after producing each step file. Run `python3 autoresearch/oandp/runner.py advance <run_dir>` between steps. The runner blocks advancement when input files are missing or validation fails.
+
+### Quality Gate (Step 06)
+The review payload includes `quality.spec_compliance` (items from done_definition, binary per item) and `quality.regression` (build_passes, tests_pass, files_outside_scope_changed).
+
+### Skip Documentation
+Skipped steps are listed in `01a_workflow_resolution.json` under `skipped_steps` with corresponding entries in `skip_reasons`.
+
+### Run Scoring
+After the final step:
+```bash
+python3 autoresearch/oandp/runner.py check <run_dir>
+python3 autoresearch/oandp/evaluate.py <run_dir> --log
+```
+
+### Validation
+`runner.py check` verifies all mandatory rules (M1-M8). A run with any FAIL result is invalid and produces no learning data.
