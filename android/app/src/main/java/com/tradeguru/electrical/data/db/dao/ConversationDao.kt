@@ -38,4 +38,7 @@ interface ConversationDao {
 
     @Query("SELECT COUNT(*) FROM conversations")
     suspend fun getCount(): Int
+
+    @Query("DELETE FROM conversations")
+    suspend fun deleteAll()
 }

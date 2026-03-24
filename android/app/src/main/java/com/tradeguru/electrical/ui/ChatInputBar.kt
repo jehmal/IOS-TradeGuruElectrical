@@ -1,7 +1,10 @@
 package com.tradeguru.electrical.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
@@ -53,6 +56,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.tradeguru.electrical.data.DomainMappers
 import com.tradeguru.electrical.models.AttachmentType
 import com.tradeguru.electrical.models.ThinkingMode
@@ -252,25 +257,63 @@ private fun InputRow(
 ) {
     val context = LocalContext.current
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    var pendingPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-            if (bytes != null) {
-                onAttachmentSelected(AttachmentType.IMAGE, bytes, "photo.jpg")
+            try {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                if (bytes != null && validateImageBytes(bytes)) {
+                    onAttachmentSelected(AttachmentType.IMAGE, bytes, "photo.jpg")
+                } else {
+                    Toast.makeText(context, "Could not load image", Toast.LENGTH_SHORT).show()
+                }
+            } catch (_: Exception) {
+                Toast.makeText(context, "Could not load image", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        if (bitmap != null) {
-            val stream = java.io.ByteArrayOutputStream()
-            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, stream)
-            onAttachmentSelected(AttachmentType.IMAGE, stream.toByteArray(), "photo.jpg")
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        val uri = pendingPhotoUri
+        if (success && uri != null) {
+            try {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                if (bytes != null && validateImageBytes(bytes)) {
+                    onAttachmentSelected(AttachmentType.IMAGE, bytes, "photo.jpg")
+                } else {
+                    Toast.makeText(context, "Could not load photo", Toast.LENGTH_SHORT).show()
+                }
+            } catch (_: Exception) {
+                Toast.makeText(context, "Could not load photo", Toast.LENGTH_SHORT).show()
+            }
+        }
+        if (!success) pendingPhotoUri = null
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            try {
+                val photoDir = File(context.cacheDir, "photos").apply { mkdirs() }
+                val photoFile = File(photoDir, "photo_${System.currentTimeMillis()}.jpg")
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    photoFile
+                )
+                pendingPhotoUri = uri
+                cameraLauncher.launch(uri)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Could not open camera", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -278,10 +321,14 @@ private fun InputRow(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-            val fileName = uri.lastPathSegment ?: "document"
-            if (bytes != null) {
-                onAttachmentSelected(AttachmentType.DOCUMENT, bytes, fileName)
+            try {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                val fileName = uri.lastPathSegment ?: "document"
+                if (bytes != null) {
+                    onAttachmentSelected(AttachmentType.DOCUMENT, bytes, fileName)
+                }
+            } catch (_: Exception) {
+                Toast.makeText(context, "Could not load file", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -329,7 +376,26 @@ private fun InputRow(
                     text = { Text("Take Photo") },
                     onClick = {
                         showAttachmentMenu = false
-                        cameraLauncher.launch(null)
+                        val hasCameraPermission = ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (hasCameraPermission) {
+                            try {
+                                val photoDir = File(context.cacheDir, "photos").apply { mkdirs() }
+                                val photoFile = File(photoDir, "photo_${System.currentTimeMillis()}.jpg")
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    photoFile
+                                )
+                                pendingPhotoUri = uri
+                                cameraLauncher.launch(uri)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Could not open camera", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
                     }
                 )
                 DropdownMenuItem(
@@ -470,5 +536,15 @@ private fun InputRow(
                 }
             }
         }
+    }
+}
+
+private fun validateImageBytes(bytes: ByteArray): Boolean {
+    return try {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+        options.outWidth > 0 && options.outHeight > 0
+    } catch (_: Exception) {
+        false
     }
 }

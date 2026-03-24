@@ -18,6 +18,7 @@ import com.tradeguru.electrical.ui.views.onboarding.OnboardingScreen
 import com.tradeguru.electrical.ui.views.settings.SettingsScreen
 import com.tradeguru.electrical.ui.views.settings.SignInView
 import com.tradeguru.electrical.viewmodels.ChatViewModel
+import android.content.pm.PackageManager
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
@@ -91,17 +92,31 @@ fun NavGraph(
         }
 
         composable(Routes.SETTINGS) {
+            val context = LocalContext.current
             val authState by appModule.authManager.authState.collectAsState()
             val tier by appModule.authManager.tier.collectAsState()
             val isAuthenticated = authState is AuthState.Authenticated
             val currentUser = (authState as? AuthState.Authenticated)?.user
 
+            val appVersion = try {
+                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                val version = pInfo.versionName ?: "1.0"
+                val build = pInfo.longVersionCode
+                "$version ($build)"
+            } catch (_: PackageManager.NameNotFoundException) {
+                "1.0 (1)"
+            }
+
             SettingsScreen(
                 isAuthenticated = isAuthenticated,
                 currentUser = currentUser,
                 tier = tier,
+                appVersion = appVersion,
                 onSignIn = { navController.navigate(Routes.SIGN_IN) },
                 onSignOut = { appModule.authManager.signOut() },
+                onClearConversations = {
+                    scope.launch { appModule.conversationManager.clearAllConversations() }
+                },
                 onDismiss = { navController.popBackStack() }
             )
         }

@@ -86,18 +86,32 @@ class ChatEngine(
         attachments: List<DomainMappers.MessageAttachment>?,
         conversation: DomainMappers.Conversation
     ) {
+        val imageAttachment = attachments?.firstOrNull {
+            it.type == com.tradeguru.electrical.models.AttachmentType.IMAGE && it.thumbnailData != null
+        }
+
+        if (imageAttachment == null || imageAttachment.thumbnailData == null) {
+            fetchResponse(mode, conversation)
+            return
+        }
+
         val lastUserMsg = conversation.messages.lastOrNull { it.role == MessageRole.USER }
         val messageText = lastUserMsg?.blocks
             ?.mapNotNull { it.content }
             ?.joinToString("\n") ?: ""
 
-        var imageDataUri = ""
-        attachments?.firstOrNull {
-            it.type == com.tradeguru.electrical.models.AttachmentType.IMAGE && it.thumbnailData != null
-        }?.let { att ->
-            imageDataUri = "data:image/jpeg;base64,${
-                android.util.Base64.encodeToString(att.thumbnailData, android.util.Base64.NO_WRAP)
+        val imageDataUri = try {
+            "data:image/jpeg;base64,${
+                android.util.Base64.encodeToString(imageAttachment.thumbnailData, android.util.Base64.NO_WRAP)
             }"
+        } catch (e: Exception) {
+            _error.value = "Failed to encode image"
+            return
+        }
+
+        if (imageDataUri.length < 30) {
+            fetchResponse(mode, conversation)
+            return
         }
 
         _isStreaming.value = true

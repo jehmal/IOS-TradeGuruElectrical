@@ -184,6 +184,13 @@ class ConversationManager(private val database: TradeGuruDatabase) {
         return conversations.filter { it.title.lowercase().contains(lowered) }
     }
 
+    suspend fun clearAllConversations() {
+        withContext(Dispatchers.IO) {
+            conversationDao.deleteAll()
+        }
+        _activeConversation.value = null
+    }
+
     suspend fun updateConversationTitle(conversationId: String, title: String) =
         withContext(Dispatchers.IO) {
             val entity = conversationDao.getById(conversationId) ?: return@withContext

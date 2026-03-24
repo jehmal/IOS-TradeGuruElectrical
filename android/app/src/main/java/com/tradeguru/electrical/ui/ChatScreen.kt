@@ -133,7 +133,14 @@ fun ChatScreen(
                         showModeCard = true
                     },
                     onSend = { text, attachment ->
-                        viewModel.send(text, selectedMode, attachment?.let { listOf(it) })
+                        val attachments = attachment?.let { listOf(it) }
+                        when (attachment?.type) {
+                            com.tradeguru.electrical.models.AttachmentType.IMAGE ->
+                                viewModel.sendWithVision(text, selectedMode, attachments)
+                            com.tradeguru.electrical.models.AttachmentType.DOCUMENT ->
+                                viewModel.sendWithDocument(text, selectedMode, attachments)
+                            else -> viewModel.send(text, selectedMode)
+                        }
                         inputText = ""
                     },
                     isStreaming = isStreaming,

@@ -93,7 +93,7 @@ fun SignInView(
 
             Button(
                 onClick = onEmailSignIn,
-                colors = ButtonDefaults.buttonColors(containerColor = colors.tradeSurface),
+                colors = ButtonDefaults.buttonColors(containerColor = TradeGreen),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,7 +103,7 @@ fun SignInView(
                     text = "Continue with Email",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.tradeText
+                    color = Color.White
                 )
             }
         }
