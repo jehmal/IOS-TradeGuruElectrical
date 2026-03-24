@@ -40,8 +40,6 @@ import com.tradeguru.electrical.models.UserTier
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 import com.tradeguru.electrical.ui.theme.TradeGreen
 
-data class AuthUser(val name: String?, val email: String, val pictureURL: String? = null)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
