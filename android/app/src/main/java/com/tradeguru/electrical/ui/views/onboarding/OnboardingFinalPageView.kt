@@ -1,5 +1,8 @@
 package com.tradeguru.electrical.ui.views.onboarding
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -15,11 +19,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tradeguru.electrical.R
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 import com.tradeguru.electrical.ui.theme.TradeGreen
 
@@ -37,14 +44,19 @@ fun OnboardingFinalPageView(
     ) {
         Spacer(modifier = Modifier.weight(1f))
 
-        Text(
-            text = "TG",
-            fontSize = 64.sp,
-            fontWeight = FontWeight.Bold,
-            color = TradeGreen,
-            modifier = Modifier.size(120.dp),
-            textAlign = TextAlign.Center
-        )
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF1A1A2E)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.tg_logo),
+                contentDescription = "Trade Guru Logo",
+                modifier = Modifier.size(80.dp)
+            )
+        }
 
         Text(
             text = "Ready to start?",
