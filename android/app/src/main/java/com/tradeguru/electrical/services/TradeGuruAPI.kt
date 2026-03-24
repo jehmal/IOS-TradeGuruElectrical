@@ -3,6 +3,7 @@ package com.tradeguru.electrical.services
 import com.google.gson.Gson
 import com.tradeguru.electrical.models.ThinkingMode
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -93,7 +94,7 @@ object TradeGuruAPI {
             var currentEvent = ""
             var currentData = ""
             while (!source.exhausted()) {
-                ensureActive()
+                currentCoroutineContext().ensureActive()
                 val line = withContext(Dispatchers.IO) { source.readUtf8Line() } ?: break
                 if (line.startsWith("event: ")) {
                     currentEvent = line.removePrefix("event: ").trim()
@@ -149,7 +150,7 @@ object TradeGuruAPI {
             var currentEvent = ""
             var currentData = ""
             while (!source.exhausted()) {
-                ensureActive()
+                currentCoroutineContext().ensureActive()
                 val line = withContext(Dispatchers.IO) { source.readUtf8Line() } ?: break
                 if (line.startsWith("event: ")) {
                     currentEvent = line.removePrefix("event: ").trim()
