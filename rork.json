@@ -4,6 +4,11 @@
       "name": "TradeGuruElectrical",
       "framework": "swift",
       "path": "ios"
+    },
+    {
+      "name": "TradeGuruElectrical",
+      "framework": "android",
+      "path": "android"
     }
   ]
 }
