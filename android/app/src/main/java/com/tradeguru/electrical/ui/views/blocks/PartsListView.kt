@@ -18,11 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tradeguru.electrical.data.PartsItem
+import com.tradeguru.electrical.data.DomainMappers
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 
 @Composable
-fun PartsListView(items: List<PartsItem>) {
+fun PartsListView(items: List<DomainMappers.PartsItem>) {
     val colors = LocalTradeGuruColors.current
     val shape = RoundedCornerShape(12.dp)
 

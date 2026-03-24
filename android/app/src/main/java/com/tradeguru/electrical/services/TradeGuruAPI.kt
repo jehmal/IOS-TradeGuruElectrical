@@ -57,7 +57,7 @@ object TradeGuruAPI {
     }
 
     fun chat(
-        messages: List<Map<String, String>>,
+        messages: List<ApiMessage>,
         mode: ThinkingMode,
         deviceId: String,
         jwt: String? = null

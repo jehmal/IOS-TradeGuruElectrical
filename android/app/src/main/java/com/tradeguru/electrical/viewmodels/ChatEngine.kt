@@ -109,7 +109,7 @@ class ChatEngine(
 
         TradeGuruAPI.chatVision(
             message = messageText,
-            imageBase64 = imageDataUri,
+            image = imageDataUri,
             mode = mode,
             deviceId = deviceId,
             jwt = currentJwt
@@ -264,11 +264,11 @@ class ChatEngine(
         if (deviceId.isEmpty() || deviceId == "pending") {
             scope.launch {
                 try {
-                    val response = withContext(Dispatchers.IO) {
+                    val newDeviceId = withContext(Dispatchers.IO) {
                         TradeGuruAPI.registerDevice()
                     }
                     deviceManager.getOrCreateDeviceId()
-                    deviceId = response.deviceId
+                    deviceId = newDeviceId
                 } catch (_: Exception) {
                     _error.value = "Device registration failed. Retrying on next launch."
                 }
