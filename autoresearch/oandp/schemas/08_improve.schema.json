@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-08-improve",
+  "title": "Step 08: Improve (Learn)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "08" },
+    "step_name": { "const": "IMPROVE_LEARN" },
+    "payload": {
+      "type": "object",
+      "required": ["what_worked", "what_failed", "bottlenecks"],
+      "properties": {
+        "what_worked": { "type": "array", "items": { "type": "string" } },
+        "what_failed": { "type": "array", "items": { "type": "string" } },
+        "bottlenecks": { "type": "array", "items": { "type": "string" } },
+        "recommended_process_changes": { "type": "array", "items": { "type": "string" } },
+        "recommended_template_changes": { "type": "array", "items": { "type": "string" } },
+        "next_iteration_backlog": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["bottleneck_count"],
+      "properties": {
+        "bottleneck_count": { "type": "integer", "minimum": 0 },
+        "estimated_waste_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reuse_opportunity_count": { "type": "integer", "minimum": 0 },
+        "improvement_priority_score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

@@ -160,6 +160,12 @@ fun NavGraph(
 
         composable(Routes.SIGN_IN) {
             val context = LocalContext.current
+            val signInAuthState by appModule.authManager.authState.collectAsState()
+            LaunchedEffect(signInAuthState) {
+                if (signInAuthState is AuthState.Authenticated) {
+                    navController.popBackStack()
+                }
+            }
             SignInView(
                 onGoogleSignIn = {
                     appModule.authManager.startSignIn(context, "GoogleOAuth")

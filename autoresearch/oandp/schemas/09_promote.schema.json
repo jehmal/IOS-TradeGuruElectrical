@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-09-promote",
+  "title": "Step 09: Promote (Deploy)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "09" },
+    "step_name": { "const": "PROMOTE_DEPLOY" },
+    "input_file": { "const": "08_improve.json" },
+    "payload": {
+      "type": "object",
+      "required": ["promotion_target", "deployment_summary", "smoke_test_results", "rollback_plan", "rollback_ready", "final_release_status"],
+      "properties": {
+        "promotion_target": { "enum": ["experiment", "candidate", "staging", "production"] },
+        "deployment_summary": { "type": "string", "minLength": 1 },
+        "deployment_artifacts": { "type": "array", "items": { "type": "string" } },
+        "smoke_test_results": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "rollback_plan": { "type": "string", "minLength": 1 },
+        "rollback_ready": { "type": "boolean" },
+        "final_release_status": { "enum": ["deployed", "rejected", "rolled_back"] }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["smoke_test_pass_rate", "promotion_confidence"],
+      "properties": {
+        "deploy_duration_sec": { "type": "number", "minimum": 0 },
+        "smoke_test_pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "incident_count": { "type": "integer", "minimum": 0 },
+        "rollback_time_estimate_sec": { "type": "number", "minimum": 0 },
+        "promotion_confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

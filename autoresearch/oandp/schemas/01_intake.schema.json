@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-01-intake",
+  "title": "Step 01: Intake (Define)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "01" },
+    "step_name": { "const": "INTAKE_DEFINE" },
+    "input_file": { "const": "00_request.json" },
+    "payload": {
+      "type": "object",
+      "required": ["problem_statement", "scope_in", "scope_out", "success_metrics", "constraints", "done_definition", "risk_level"],
+      "properties": {
+        "problem_statement": { "type": "string", "minLength": 1 },
+        "scope_in": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "scope_out": { "type": "array", "items": { "type": "string" } },
+        "success_metrics": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "stakeholders": { "type": "array", "items": { "type": "string" } },
+        "done_definition": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "risk_level": { "enum": ["low", "medium", "high"] }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["scope_clarity_score", "success_metric_count", "constraint_count", "risk_score"],
+      "properties": {
+        "scope_clarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "success_metric_count": { "type": "integer", "minimum": 0 },
+        "constraint_count": { "type": "integer", "minimum": 0 },
+        "risk_score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

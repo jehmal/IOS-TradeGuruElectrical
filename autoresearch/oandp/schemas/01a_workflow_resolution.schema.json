@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-01a-workflow-resolution",
+  "title": "Step 01a: Workflow Resolution",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "01a" },
+    "step_name": { "const": "WORKFLOW_RESOLUTION" },
+    "input_file": { "const": "01_intake.json" },
+    "payload": {
+      "type": "object",
+      "required": [
+        "task_class", "estimated_complexity", "risk_level", "reversibility",
+        "production_impact", "customer_impact", "compliance_impact",
+        "execution_profile", "materialized_steps", "routing"
+      ],
+      "properties": {
+        "task_class": { "type": "string", "minLength": 1 },
+        "estimated_complexity": { "enum": ["low", "medium", "high"] },
+        "risk_level": { "enum": ["low", "medium", "high"] },
+        "reversibility": { "enum": ["easy", "moderate", "hard"] },
+        "production_impact": { "type": "boolean" },
+        "customer_impact": { "type": "boolean" },
+        "compliance_impact": { "type": "boolean" },
+        "hil_required": { "type": "boolean" },
+        "execution_profile": { "enum": ["TRIVIAL", "STANDARD", "COMPLEX", "HIGH_RISK"] },
+        "materialized_steps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 5
+        },
+        "collapsed_steps": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "skipped_steps": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "skip_reasons": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "agent_a_assessment": {
+          "type": "object",
+          "properties": {
+            "proposed_profile": { "type": "string" },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "reasoning": { "type": "string" }
+          }
+        },
+        "agent_b_validation": {
+          "type": "object",
+          "properties": {
+            "agrees": { "type": "boolean" },
+            "proposed_profile": { "type": "string" },
+            "reasoning": { "type": "string" }
+          }
+        },
+        "routing": {
+          "type": "object",
+          "required": ["next_step_file"],
+          "properties": {
+            "next_step_file": { "type": "string" }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["routing_confidence", "agent_agreement"],
+      "properties": {
+        "routing_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "agent_agreement": { "type": "boolean" }
+      }
+    }
+  }
+}

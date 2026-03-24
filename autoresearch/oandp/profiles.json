@@ -1,0 +1,197 @@
+{
+  "schema_version": "1.0",
+  "description": "O&P execution profiles. Maps routing drivers to materialized step paths.",
+
+  "drivers": {
+    "task_class": {
+      "type": "enum",
+      "values": ["bug_fix", "feature", "research", "ops", "content", "integration", "deployment", "doc_update", "config_tweak", "build", "optimize", "other"]
+    },
+    "estimated_complexity": {
+      "type": "enum",
+      "values": ["low", "medium", "high"]
+    },
+    "risk_level": {
+      "type": "enum",
+      "values": ["low", "medium", "high"]
+    },
+    "reversibility": {
+      "type": "enum",
+      "values": ["easy", "moderate", "hard"]
+    },
+    "production_impact": {
+      "type": "boolean"
+    },
+    "compliance_impact": {
+      "type": "boolean"
+    }
+  },
+
+  "selection_logic": {
+    "order": "first_match",
+    "rules": [
+      {
+        "name": "HIGH_RISK",
+        "condition": "risk_level == 'high'",
+        "profile": "HIGH_RISK"
+      },
+      {
+        "name": "COMPLEX",
+        "condition": "estimated_complexity == 'high'",
+        "profile": "COMPLEX"
+      },
+      {
+        "name": "TRIVIAL",
+        "condition": "task_class in ['bug_fix', 'doc_update', 'config_tweak'] and estimated_complexity == 'low' and risk_level == 'low' and reversibility == 'easy' and production_impact == false and compliance_impact == false",
+        "profile": "TRIVIAL"
+      },
+      {
+        "name": "DEFAULT",
+        "condition": "true",
+        "profile": "STANDARD"
+      }
+    ]
+  },
+
+  "profiles": {
+    "TRIVIAL": {
+      "description": "Low-complexity, low-risk, easily reversible tasks",
+      "materialized_steps": [
+        "00_request.json",
+        "01_intake.json",
+        "01a_workflow_resolution.json",
+        "02_03_04_plan.json",
+        "05_execute.json",
+        "06_review.json",
+        "08_improve.json"
+      ],
+      "collapsed_steps": {
+        "02_decompose": "02_03_04_plan.json",
+        "03_system_select": "02_03_04_plan.json",
+        "04_design": "02_03_04_plan.json"
+      },
+      "skippable_steps": ["07_integrate", "09_promote"],
+      "mandatory_hil_gates": []
+    },
+
+    "STANDARD": {
+      "description": "Normal feature work, medium complexity, moderate dependencies",
+      "materialized_steps": [
+        "00_request.json",
+        "01_intake.json",
+        "01a_workflow_resolution.json",
+        "02_decompose.json",
+        "03_system_select.json",
+        "04_design.json",
+        "05_execute.json",
+        "06_review.json",
+        "07_integrate.json",
+        "08_improve.json"
+      ],
+      "collapsed_steps": {},
+      "skippable_steps": ["09_promote"],
+      "mandatory_hil_gates": []
+    },
+
+    "COMPLEX": {
+      "description": "High complexity, multi-component, integration dependencies",
+      "materialized_steps": [
+        "00_request.json",
+        "01_intake.json",
+        "01a_workflow_resolution.json",
+        "02_decompose.json",
+        "03_system_select.json",
+        "04_design.json",
+        "05_execute.json",
+        "06_review.json",
+        "07_integrate.json",
+        "08_improve.json",
+        "09_promote.json"
+      ],
+      "collapsed_steps": {},
+      "skippable_steps": [],
+      "mandatory_hil_gates": []
+    },
+
+    "HIGH_RISK": {
+      "description": "High production/compliance/safety impact, irreversible changes",
+      "materialized_steps": [
+        "00_request.json",
+        "01_intake.json",
+        "01a_workflow_resolution.json",
+        "02_decompose.json",
+        "03_system_select.json",
+        "04_design.json",
+        "05_execute.json",
+        "06_review.json",
+        "07_integrate.json",
+        "08_improve.json",
+        "09_promote.json"
+      ],
+      "collapsed_steps": {},
+      "skippable_steps": [],
+      "mandatory_hil_gates": ["03_system_select", "04_design", "06_review", "09_promote"]
+    }
+  },
+
+  "hard_guardrails": [
+    {
+      "id": "G1",
+      "rule": "If risk_level == 'high', no collapsing beyond planning compression",
+      "enforcement": "profile must be HIGH_RISK or COMPLEX"
+    },
+    {
+      "id": "G2",
+      "rule": "If production_impact == true, 06_review.json may never be skipped",
+      "enforcement": "06_review always in materialized_steps"
+    },
+    {
+      "id": "G3",
+      "rule": "If compliance_impact == true, steps 03, 04, 06, 09 must all be materialized",
+      "enforcement": "override profile to COMPLEX minimum"
+    },
+    {
+      "id": "G4",
+      "rule": "If customer_impact == true and reversibility == 'hard', mandatory HIL before execution and promotion",
+      "enforcement": "add 04_design and 09_promote to mandatory_hil_gates"
+    },
+    {
+      "id": "G5",
+      "rule": "If more than one artifact family changed, 07_integrate.json is required",
+      "enforcement": "add 07_integrate to materialized_steps"
+    }
+  ],
+
+  "never_skip": [
+    "00_request.json",
+    "01_intake.json",
+    "01a_workflow_resolution.json",
+    "05_execute.json",
+    "06_review.json"
+  ],
+
+  "step_order": [
+    "00_request.json",
+    "01_intake.json",
+    "01a_workflow_resolution.json",
+    "02_decompose.json",
+    "02_03_04_plan.json",
+    "03_system_select.json",
+    "04_design.json",
+    "05_execute.json",
+    "06_review.json",
+    "07_integrate.json",
+    "08_improve.json",
+    "09_promote.json"
+  ],
+
+  "review_routing": {
+    "06_review": {
+      "pass": "07_integrate.json",
+      "needs_revision": ["04_design.json", "05_execute.json"],
+      "needs_human": "HOLD",
+      "fail": "CLOSE_OR_REDESIGN",
+      "blocked": "ESCALATE"
+    }
+  }
+}

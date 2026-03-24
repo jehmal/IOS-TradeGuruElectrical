@@ -1,0 +1,6 @@
+# O&P Workflow Supervisor Log
+# Started: 2026-03-24
+# Engine: Claude Code CLI (headless, 3-runs-per-session restart)
+# Purpose: Orchestrate workflow runs, categorize outcomes, learn routing
+---
+

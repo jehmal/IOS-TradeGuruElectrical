@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-03-system-select",
+  "title": "Step 03: Select System (DMADV / DMAIC)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "03" },
+    "step_name": { "const": "SYSTEM_SELECT" },
+    "input_file": { "const": "02_decompose.json" },
+    "payload": {
+      "type": "object",
+      "required": ["primary_system", "selection_reason", "system_mapping"],
+      "properties": {
+        "primary_system": { "enum": ["DMADV", "DMAIC"] },
+        "selection_reason": { "type": "string", "minLength": 1 },
+        "secondary_loops": {
+          "type": "array",
+          "items": { "enum": ["PDCA", "OODA", "TOC"] }
+        },
+        "system_mapping": {
+          "type": "object",
+          "required": ["define_phase", "measure_phase", "analyze_phase", "build_or_improve_phase", "verify_or_control_phase"],
+          "properties": {
+            "define_phase": { "type": "string" },
+            "measure_phase": { "type": "string" },
+            "analyze_phase": { "type": "string" },
+            "build_or_improve_phase": { "type": "string" },
+            "verify_or_control_phase": { "type": "string" }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["selection_confidence", "fit_score"],
+      "properties": {
+        "selection_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "fit_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "uncertainty_count": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

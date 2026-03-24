@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-07-integrate",
+  "title": "Step 07: Integrate (Assemble)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "07" },
+    "step_name": { "const": "INTEGRATE_ASSEMBLE" },
+    "input_file": { "const": "06_review.json" },
+    "payload": {
+      "type": "object",
+      "required": ["integration_summary", "accepted_components", "release_candidate_manifest", "integration_test_results"],
+      "properties": {
+        "integration_summary": { "type": "string", "minLength": 1 },
+        "accepted_components": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "rejected_components": { "type": "array", "items": { "type": "string" } },
+        "resolved_dependencies": { "type": "array", "items": { "type": "string" } },
+        "release_candidate_manifest": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "documentation_status": { "type": "string" },
+        "integration_test_results": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["integration_success_rate", "release_readiness_score"],
+      "properties": {
+        "integration_success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "conflict_count": { "type": "integer", "minimum": 0 },
+        "artifact_completeness_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "release_readiness_score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

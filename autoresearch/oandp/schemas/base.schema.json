@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-base",
+  "title": "O&P Universal Step Schema",
+  "description": "Base schema every O&P step manifest must satisfy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "step_id",
+    "step_name",
+    "status",
+    "input_file",
+    "input_checksum",
+    "created_at",
+    "actor",
+    "objective",
+    "payload",
+    "artifacts",
+    "metrics",
+    "hil",
+    "decision",
+    "trace"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-\\d{4}-\\d{2}-\\d{2}-\\d{3,}$"
+    },
+    "step_id": {
+      "type": "string"
+    },
+    "step_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "in_progress", "complete", "failed", "blocked"]
+    },
+    "input_file": {
+      "type": "string"
+    },
+    "input_checksum": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor": {
+      "type": "object",
+      "required": ["mode", "actor_id"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["agent", "human", "hybrid"]
+        },
+        "actor_id": { "type": "string" },
+        "reviewer_id": { "type": "string" }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "required": ["task_name", "task_type", "success_definition"],
+      "properties": {
+        "task_name": { "type": "string", "minLength": 1 },
+        "task_type": { "type": "string", "minLength": 1 },
+        "success_definition": { "type": "string", "minLength": 1 }
+      }
+    },
+    "payload": {
+      "type": "object"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "type"],
+        "properties": {
+          "path": { "type": "string" },
+          "type": { "type": "string" },
+          "checksum": { "type": "string" }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "hil": {
+      "type": "object",
+      "required": ["required", "status"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "enum": ["not_required", "pending", "approved", "rejected"]
+        },
+        "review_notes": { "type": "string" },
+        "approved_by": { "type": "string" },
+        "approved_at": { "type": "string" },
+        "rejection_reason": { "type": "string" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["result", "next_step"],
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": ["pass", "fail", "needs_revision", "needs_human", "blocked"]
+        },
+        "reason": { "type": "string" },
+        "next_step": { "type": "string" }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "required": ["assumptions", "risks", "changes", "lineage"],
+      "properties": {
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } },
+        "changes": { "type": "array", "items": { "type": "string" } },
+        "lineage": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

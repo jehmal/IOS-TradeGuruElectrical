@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-06-review",
+  "title": "Step 06: Review (Check)",
+  "description": "Main gatekeeping step. Must produce a single unambiguous result.",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "06" },
+    "step_name": { "const": "REVIEW_CHECK" },
+    "input_file": { "const": "05_execute.json" },
+    "payload": {
+      "type": "object",
+      "required": ["review_summary", "evaluation_results", "quality", "decision_basis"],
+      "properties": {
+        "review_summary": { "type": "string", "minLength": 1 },
+        "evaluation_results": { "type": "array", "items": { "type": "string" } },
+        "defects_found": { "type": "array", "items": { "type": "string" } },
+        "compliance_findings": { "type": "array", "items": { "type": "string" } },
+        "safety_findings": { "type": "array", "items": { "type": "string" } },
+        "performance_findings": { "type": "array", "items": { "type": "string" } },
+        "quality": {
+          "type": "object",
+          "required": ["spec_compliance", "regression"],
+          "properties": {
+            "spec_compliance": {
+              "type": "object",
+              "required": ["items_defined", "items_met", "score"],
+              "properties": {
+                "items_defined": { "type": "integer", "minimum": 0 },
+                "items_met": { "type": "integer", "minimum": 0 },
+                "score": { "type": "number", "minimum": 0, "maximum": 1 },
+                "failures": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "regression": {
+              "type": "object",
+              "required": ["build_passes", "tests_pass", "score"],
+              "properties": {
+                "build_passes": { "type": "boolean" },
+                "tests_pass": { "type": "boolean" },
+                "new_warnings": { "type": "integer", "minimum": 0 },
+                "files_outside_scope_changed": { "type": "array", "items": { "type": "string" } },
+                "score": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          }
+        },
+        "decision_basis": { "type": "string", "minLength": 1 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["overall_pass_rate", "defect_count", "review_cycle_time_sec"],
+      "properties": {
+        "overall_pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "defect_count": { "type": "integer", "minimum": 0 },
+        "severity_score": { "type": "number", "minimum": 0 },
+        "compliance_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "review_cycle_time_sec": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

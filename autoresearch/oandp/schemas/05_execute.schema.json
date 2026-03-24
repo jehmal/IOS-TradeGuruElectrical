@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oandp-05-execute",
+  "title": "Step 05: Execute (Build)",
+  "allOf": [{ "$ref": "base.schema.json" }],
+  "properties": {
+    "step_id": { "const": "05" },
+    "step_name": { "const": "EXECUTE_BUILD" },
+    "payload": {
+      "type": "object",
+      "required": ["execution_summary", "completed_workstreams", "change_manifest", "artifact_manifest"],
+      "properties": {
+        "execution_summary": { "type": "string", "minLength": 1 },
+        "completed_workstreams": { "type": "array", "items": { "type": "string" } },
+        "partial_workstreams": { "type": "array", "items": { "type": "string" } },
+        "blocked_workstreams": { "type": "array", "items": { "type": "string" } },
+        "change_manifest": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "action"],
+            "properties": {
+              "file": { "type": "string" },
+              "action": { "enum": ["created", "modified", "deleted"] },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "artifact_manifest": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "type"],
+            "properties": {
+              "path": { "type": "string" },
+              "type": { "type": "string" },
+              "checksum": { "type": "string" }
+            }
+          }
+        },
+        "local_validation_results": { "type": "array", "items": { "type": "string" } },
+        "open_issues": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["completion_rate", "build_success_rate", "execution_time_sec"],
+      "properties": {
+        "completion_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "build_success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "local_test_pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "defect_count_known": { "type": "integer", "minimum": 0 },
+        "execution_time_sec": { "type": "number", "minimum": 0 },
+        "human_minutes": { "type": "number", "minimum": 0 },
+        "api_cost_usd": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
