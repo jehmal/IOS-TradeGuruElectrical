@@ -70,6 +70,7 @@ fun NavGraph(
         composable(Routes.LOGIN) {
             val context = LocalContext.current
             val loginAuthState by appModule.authManager.authState.collectAsState()
+            val loginAuthError by appModule.authManager.authError.collectAsState()
             LaunchedEffect(loginAuthState) {
                 if (loginAuthState is AuthState.Authenticated) {
                     navController.navigate(Routes.ONBOARDING) {
@@ -78,6 +79,7 @@ fun NavGraph(
                 }
             }
             SignInView(
+                authError = loginAuthError,
                 onGoogleSignIn = {
                     appModule.authManager.startSignIn(context, "GoogleOAuth")
                 },
@@ -160,7 +162,15 @@ fun NavGraph(
 
         composable(Routes.SIGN_IN) {
             val context = LocalContext.current
+            val signInAuthState by appModule.authManager.authState.collectAsState()
+            val authError by appModule.authManager.authError.collectAsState()
+            LaunchedEffect(signInAuthState) {
+                if (signInAuthState is AuthState.Authenticated) {
+                    navController.popBackStack()
+                }
+            }
             SignInView(
+                authError = authError,
                 onGoogleSignIn = {
                     appModule.authManager.startSignIn(context, "GoogleOAuth")
                 },
