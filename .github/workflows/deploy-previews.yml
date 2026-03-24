@@ -1,0 +1,71 @@
+name: Deploy HTML Previews to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'preview/**'
+      - 'android/preview/**'
+      - '.github/workflows/deploy-previews.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build preview site
+        run: |
+          mkdir -p _site
+          cp preview/chat.html _site/ios.html
+          cp preview/tradeguru-logo.png _site/tradeguru-logo.png
+          cp preview/logo.png _site/logo.png 2>/dev/null || true
+          cp android/preview/chat.html _site/android.html
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>TradeGuru Previews</title>
+            <style>
+              body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; gap: 24px; }
+              a { display: block; padding: 20px 48px; background: #20AB6E; color: white; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: 600; text-align: center; }
+              a:hover { background: #1a8f5a; }
+              h1 { font-size: 32px; margin-bottom: 8px; }
+              p { color: #9CA3AF; margin-bottom: 24px; }
+            </style>
+          </head>
+          <body>
+            <h1>TradeGuru Previews</h1>
+            <p>Tap to open the interactive preview</p>
+            <a href="ios.html">iOS Preview (iPhone / iPad)</a>
+            <a href="android.html">Android Preview (Pixel / Samsung)</a>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
