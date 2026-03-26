@@ -96,13 +96,10 @@ fun ChatMessageList(
             }
         } else if (isStreaming && streamingBlocks.isEmpty()) {
             item(key = "typing") {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    PipelineStatusView(
-                        stage = pipelineStage,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    TypingIndicator()
-                }
+                PipelineStatusView(
+                    stage = pipelineStage,
+                    modifier = Modifier
+                )
             }
         }
     }
