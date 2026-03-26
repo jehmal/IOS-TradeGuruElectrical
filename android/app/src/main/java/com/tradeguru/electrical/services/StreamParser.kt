@@ -120,7 +120,12 @@ object StreamParser {
             if (structured != null) {
                 StreamResult.Response(structured, data)
             } else {
-                StreamResult.Block(ContentBlock(id = "", type = ContentBlockType.TEXT, content = data))
+                val fallbackText = if (json.has("summary")) {
+                    json.get("summary").asString
+                } else {
+                    data
+                }
+                StreamResult.Block(ContentBlock(id = "", type = ContentBlockType.TEXT, content = fallbackText))
             }
         } catch (e: Exception) {
             StreamResult.Error(
