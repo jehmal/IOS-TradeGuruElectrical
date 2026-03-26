@@ -355,7 +355,10 @@ class ChatEngine(
         conversation: DomainMappers.Conversation
     ): List<ApiMessage> =
         conversation.messages.map { msg ->
-            val content = msg.blocks.mapNotNull { it.content }.joinToString("\n")
+            var content = msg.blocks.mapNotNull { it.content }.joinToString("\n")
+            if (content.isBlank() && msg.structuredData != null) {
+                content = msg.structuredData.summary
+            }
             ApiMessage(role = msg.role.value, content = content)
         }
 
