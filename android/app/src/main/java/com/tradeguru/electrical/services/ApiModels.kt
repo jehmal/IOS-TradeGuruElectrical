@@ -2,9 +2,11 @@ package com.tradeguru.electrical.services
 
 import com.google.gson.annotations.SerializedName
 import com.tradeguru.electrical.data.DomainMappers.ContentBlock
+import com.tradeguru.electrical.models.StructuredResponse
 
 sealed class StreamResult {
     data class Block(val block: ContentBlock) : StreamResult()
+    data class Response(val structured: StructuredResponse, val rawJson: String) : StreamResult()
     data class Status(val payload: StatusPayload) : StreamResult()
     data class Done(val payload: StreamDonePayload) : StreamResult()
     data class Error(val payload: StreamErrorPayload) : StreamResult()

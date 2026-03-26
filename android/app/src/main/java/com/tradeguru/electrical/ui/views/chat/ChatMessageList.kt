@@ -32,10 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.tradeguru.electrical.data.DomainMappers
 import com.tradeguru.electrical.models.MessageRole
 import com.tradeguru.electrical.models.PipelineStage
+import com.tradeguru.electrical.models.StructuredResponse
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 import com.tradeguru.electrical.ui.views.MessageBubble
 import com.tradeguru.electrical.ui.views.PipelineStatusView
 import com.tradeguru.electrical.ui.views.blocks.RenderBlock
+import com.tradeguru.electrical.ui.views.structured.StructuredMessageRenderer
 import com.tradeguru.electrical.viewmodels.ChatViewModel
 
 @Composable
@@ -45,6 +47,7 @@ fun ChatMessageList(
     isStreaming: Boolean,
     pipelineStage: PipelineStage,
     viewModel: ChatViewModel,
+    streamingStructured: StructuredResponse? = null,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -74,7 +77,20 @@ fun ChatMessageList(
             )
         }
 
-        if (isStreaming && streamingBlocks.isNotEmpty()) {
+        if (isStreaming && streamingStructured != null) {
+            item(key = "streaming_structured") {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier
+                        .widthIn(max = 330.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.tradeSurface)
+                        .padding(14.dp)
+                ) {
+                    StructuredMessageRenderer(response = streamingStructured)
+                }
+            }
+        } else if (isStreaming && streamingBlocks.isNotEmpty()) {
             item(key = "streaming") {
                 StreamingBubble(blocks = streamingBlocks)
             }

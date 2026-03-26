@@ -23,5 +23,6 @@ data class ChatMessageEntity(
     val role: String,
     val timestamp: Long,
     val mode: String,
-    val conversationId: String
+    val conversationId: String,
+    val structuredJson: String? = null
 )

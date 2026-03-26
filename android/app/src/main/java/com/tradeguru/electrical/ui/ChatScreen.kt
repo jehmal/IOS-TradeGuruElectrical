@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tradeguru.electrical.R
 import com.tradeguru.electrical.models.PipelineStage
+import com.tradeguru.electrical.models.StructuredResponse
 import com.tradeguru.electrical.models.ThinkingMode
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 import com.tradeguru.electrical.ui.views.SidebarView
@@ -57,6 +58,7 @@ fun ChatScreen(
     val streamingBlocks by viewModel.streamingBlocks.collectAsState()
     val error by viewModel.error.collectAsState()
     val pipelineStage by viewModel.pipelineStage.collectAsState()
+    val structuredResponse by viewModel.structuredResponse.collectAsState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -102,6 +104,7 @@ fun ChatScreen(
                     isStreaming = isStreaming,
                     streamingBlocks = streamingBlocks,
                     pipelineStage = pipelineStage,
+                    structuredResponse = structuredResponse,
                     viewModel = viewModel,
                     onDismissCard = { showModeCard = false; userDismissedCard = true },
                     modifier = Modifier.weight(1f)
@@ -160,6 +163,7 @@ private fun ConversationArea(
     isStreaming: Boolean,
     streamingBlocks: List<com.tradeguru.electrical.data.DomainMappers.ContentBlock>,
     pipelineStage: PipelineStage,
+    structuredResponse: StructuredResponse?,
     viewModel: ChatViewModel,
     onDismissCard: () -> Unit,
     modifier: Modifier = Modifier
@@ -176,7 +180,7 @@ private fun ConversationArea(
             }
 
             val hasMessages = activeConversation != null &&
-                (activeConversation.messages.isNotEmpty() || streamingBlocks.isNotEmpty())
+                (activeConversation.messages.isNotEmpty() || streamingBlocks.isNotEmpty() || structuredResponse != null)
 
             if (hasMessages) {
                 ChatMessageList(
@@ -185,6 +189,7 @@ private fun ConversationArea(
                     isStreaming = isStreaming,
                     pipelineStage = pipelineStage,
                     viewModel = viewModel,
+                    streamingStructured = structuredResponse,
                     modifier = Modifier.weight(1f)
                 )
             } else {

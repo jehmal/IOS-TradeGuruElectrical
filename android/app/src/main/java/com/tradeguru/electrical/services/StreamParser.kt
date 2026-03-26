@@ -2,8 +2,12 @@ package com.tradeguru.electrical.services
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.tradeguru.electrical.data.DomainMappers.ContentBlock
 import com.tradeguru.electrical.models.ContentBlockType
+import com.tradeguru.electrical.models.FaultFindingResponse
+import com.tradeguru.electrical.models.QuestionResponse
+import com.tradeguru.electrical.models.ResearchStructuredResponse
 
 object StreamParser {
     private val gson = Gson()
@@ -11,6 +15,7 @@ object StreamParser {
     fun parse(event: String, data: String): StreamResult {
         return when (event) {
             "block" -> parseBlock(data)
+            "response" -> parseResponse(data)
             "status" -> parseStatus(data)
             "done" -> parseDone(data)
             "error" -> parseError(data)
@@ -95,6 +100,33 @@ object StreamParser {
                 StreamErrorPayload(
                     code = "PARSE_ERROR",
                     message = "Failed to parse error: ${e.message}"
+                )
+            )
+        }
+    }
+
+    private fun parseResponse(data: String): StreamResult {
+        return try {
+            val json = JsonParser.parseString(data).asJsonObject
+            val structured = when {
+                json.has("intent") && json.get("intent").asString == "question" ->
+                    gson.fromJson(data, QuestionResponse::class.java)
+                json.has("intent") && json.get("intent").asString == "research" ->
+                    gson.fromJson(data, ResearchStructuredResponse::class.java)
+                json.has("safety") && json.has("diagnostic_steps") ->
+                    gson.fromJson(data, FaultFindingResponse::class.java)
+                else -> null
+            }
+            if (structured != null) {
+                StreamResult.Response(structured, data)
+            } else {
+                StreamResult.Block(ContentBlock(id = "", type = ContentBlockType.TEXT, content = data))
+            }
+        } catch (e: Exception) {
+            StreamResult.Error(
+                StreamErrorPayload(
+                    code = "PARSE_ERROR",
+                    message = "Failed to parse response: ${e.message}"
                 )
             )
         }

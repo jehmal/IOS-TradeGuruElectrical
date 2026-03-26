@@ -25,7 +25,7 @@ import com.tradeguru.electrical.data.db.entities.PartsItemEntity
         PartsItemEntity::class,
         MessageAttachmentEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

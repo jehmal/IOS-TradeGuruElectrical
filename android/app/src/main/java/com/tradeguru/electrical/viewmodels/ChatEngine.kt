@@ -8,6 +8,7 @@ import com.tradeguru.electrical.models.ThinkingMode
 import com.tradeguru.electrical.services.ApiMessage
 import com.tradeguru.electrical.services.AuthManager
 import com.tradeguru.electrical.services.DeviceManager
+import com.tradeguru.electrical.models.StructuredResponse
 import com.tradeguru.electrical.services.StreamResult
 import com.tradeguru.electrical.services.TradeGuruAPI
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +41,9 @@ class ChatEngine(
 
     private val _pipelineStage = MutableStateFlow(PipelineStage.IDLE)
     val pipelineStage: StateFlow<PipelineStage> = _pipelineStage
+
+    private val _structuredResponse = MutableStateFlow<StructuredResponse?>(null)
+    val structuredResponse: StateFlow<StructuredResponse?> = _structuredResponse
 
     var lastResponseId: String? = null
         private set
@@ -297,15 +301,18 @@ class ChatEngine(
         conversation: DomainMappers.Conversation
     ): DomainMappers.ChatMessage {
         val blocks = _streamingBlocks.value.toList()
+        val structured = _structuredResponse.value
         val assistantMessage = DomainMappers.ChatMessage(
             id = UUID.randomUUID().toString(),
             role = MessageRole.ASSISTANT,
             blocks = blocks,
             timestamp = System.currentTimeMillis(),
-            mode = mode
+            mode = mode,
+            structuredData = structured
         )
 
         _streamingBlocks.value = emptyList()
+        _structuredResponse.value = null
         _isStreaming.value = false
         _pipelineStage.value = PipelineStage.IDLE
 
@@ -339,6 +346,7 @@ class ChatEngine(
 
     fun resetForNewConversation() {
         _streamingBlocks.value = emptyList()
+        _structuredResponse.value = null
         _isStreaming.value = false
         _error.value = null
     }
@@ -355,6 +363,9 @@ class ChatEngine(
         when (result) {
             is StreamResult.Block -> {
                 _streamingBlocks.value = _streamingBlocks.value + result.block
+            }
+            is StreamResult.Response -> {
+                _structuredResponse.value = result.structured
             }
             is StreamResult.Status -> {
                 val stage = PipelineStage.fromValue(result.payload.stage)

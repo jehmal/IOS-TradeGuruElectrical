@@ -39,6 +39,7 @@ import com.tradeguru.electrical.models.MessageRole
 import com.tradeguru.electrical.ui.modeColor
 import com.tradeguru.electrical.ui.theme.LocalTradeGuruColors
 import com.tradeguru.electrical.ui.views.blocks.RenderBlock
+import com.tradeguru.electrical.ui.views.structured.StructuredMessageRenderer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -102,8 +103,12 @@ private fun AssistantBubble(
             .background(colors.tradeSurface)
             .padding(14.dp)
     ) {
-        message.blocks.forEach { block ->
-            RenderBlock(block = block)
+        if (message.structuredData != null) {
+            StructuredMessageRenderer(response = message.structuredData)
+        } else {
+            message.blocks.forEach { block ->
+                RenderBlock(block = block)
+            }
         }
     }
 }

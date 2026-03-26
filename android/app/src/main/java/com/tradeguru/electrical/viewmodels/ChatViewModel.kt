@@ -6,6 +6,7 @@ import com.tradeguru.electrical.data.DomainMappers
 import com.tradeguru.electrical.models.ContentBlockType
 import com.tradeguru.electrical.models.MessageRole
 import com.tradeguru.electrical.models.PipelineStage
+import com.tradeguru.electrical.models.StructuredResponse
 import com.tradeguru.electrical.models.ThinkingMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,6 +35,7 @@ class ChatViewModel(
     val error: StateFlow<String?> = engine.error
     val lastResponseId: String? get() = engine.lastResponseId
     val pipelineStage: StateFlow<PipelineStage> = engine.pipelineStage
+    val structuredResponse: StateFlow<StructuredResponse?> = engine.structuredResponse
 
     fun send(
         text: String,
@@ -201,7 +203,7 @@ class ChatViewModel(
         if (engine.error.value != null) return
 
         val assistantMessage = engine.finalizeResponse(mode, fullConversation)
-        if (assistantMessage.blocks.isNotEmpty()) {
+        if (assistantMessage.blocks.isNotEmpty() || assistantMessage.structuredData != null) {
             conversationManager.saveMessage(conversationId, assistantMessage)
         }
 

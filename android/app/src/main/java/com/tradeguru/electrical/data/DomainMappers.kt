@@ -8,8 +8,13 @@ import com.tradeguru.electrical.data.db.entities.ConversationEntity
 import com.tradeguru.electrical.data.db.entities.MessageAttachmentEntity
 import com.tradeguru.electrical.data.db.entities.PartsItemEntity
 import com.tradeguru.electrical.models.AttachmentType
+import com.google.gson.JsonParser
 import com.tradeguru.electrical.models.ContentBlockType
+import com.tradeguru.electrical.models.FaultFindingResponse
 import com.tradeguru.electrical.models.MessageRole
+import com.tradeguru.electrical.models.QuestionResponse
+import com.tradeguru.electrical.models.ResearchStructuredResponse
+import com.tradeguru.electrical.models.StructuredResponse
 import com.tradeguru.electrical.models.ThinkingMode
 
 object DomainMappers {
@@ -33,7 +38,8 @@ object DomainMappers {
         val blocks: List<ContentBlock>,
         val timestamp: Long,
         val mode: ThinkingMode,
-        val attachments: List<MessageAttachment> = emptyList()
+        val attachments: List<MessageAttachment> = emptyList(),
+        val structuredData: StructuredResponse? = null
     )
 
     data class ContentBlock(
@@ -119,8 +125,26 @@ object DomainMappers {
         blocks = blocks,
         timestamp = timestamp,
         mode = ThinkingMode.fromValue(mode) ?: ThinkingMode.FAULT_FINDER,
-        attachments = attachments
+        attachments = attachments,
+        structuredData = structuredJson?.let { deserializeStructuredResponse(it) }
     )
+
+    private fun deserializeStructuredResponse(json: String): StructuredResponse? {
+        return try {
+            val obj = JsonParser.parseString(json).asJsonObject
+            when {
+                obj.has("intent") && obj.get("intent").asString == "question" ->
+                    gson.fromJson(json, QuestionResponse::class.java)
+                obj.has("intent") && obj.get("intent").asString == "research" ->
+                    gson.fromJson(json, ResearchStructuredResponse::class.java)
+                obj.has("safety") && obj.has("diagnostic_steps") ->
+                    gson.fromJson(json, FaultFindingResponse::class.java)
+                else -> null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     fun ConversationEntity.toDomain(
         messages: List<ChatMessage> = emptyList()

@@ -77,16 +77,18 @@ class ConversationManager(private val database: TradeGuruDatabase) {
         conversationId: String,
         message: DomainMappers.ChatMessage
     ) = withContext(Dispatchers.IO) {
+        val gson = com.google.gson.Gson()
+        val structuredJson = message.structuredData?.let { gson.toJson(it) }
+
         val messageEntity = ChatMessageEntity(
             id = message.id,
             role = message.role.value,
             timestamp = message.timestamp,
             mode = message.mode.value,
-            conversationId = conversationId
+            conversationId = conversationId,
+            structuredJson = structuredJson
         )
         chatMessageDao.insert(messageEntity)
-
-        val gson = com.google.gson.Gson()
 
         val blockEntities = message.blocks.map { block ->
             ContentBlockEntity(
