@@ -32,6 +32,7 @@ fun StructuredMessageRenderer(response: StructuredResponse) {
             is FaultFindingResponse -> FaultFindingContent(response)
             is QuestionResponse -> QuestionContent(response)
             is ResearchStructuredResponse -> ResearchContent(response)
+            else -> {}
         }
     }
 }

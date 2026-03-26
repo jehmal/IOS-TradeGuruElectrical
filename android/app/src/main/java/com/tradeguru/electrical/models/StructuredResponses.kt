@@ -2,8 +2,8 @@ package com.tradeguru.electrical.models
 
 import com.google.gson.annotations.SerializedName
 
-sealed class StructuredResponse {
-    abstract val summary: String
+interface StructuredResponse {
+    val summary: String
 }
 
 data class FaultFindingResponse(
@@ -18,7 +18,7 @@ data class FaultFindingResponse(
     @SerializedName("next_actions") val nextActions: List<NextAction>,
     val references: List<String>? = null,
     @SerializedName("additional_info") val additionalInfo: String? = null
-) : StructuredResponse()
+) : StructuredResponse
 
 data class QuestionResponse(
     val intent: String,
@@ -30,7 +30,7 @@ data class QuestionResponse(
     val sources: List<Source>? = null,
     @SerializedName("related_topics") val relatedTopics: List<String>? = null,
     @SerializedName("next_actions") val nextActions: List<NextAction>? = null
-) : StructuredResponse()
+) : StructuredResponse
 
 data class ResearchStructuredResponse(
     val intent: String,
@@ -44,7 +44,7 @@ data class ResearchStructuredResponse(
     val tips: List<String>? = null,
     @SerializedName("next_steps") val nextSteps: List<String>? = null,
     @SerializedName("confidence_note") val confidenceNote: String? = null
-) : StructuredResponse()
+) : StructuredResponse
 
 data class SafetyInfo(
     val priority: String,
