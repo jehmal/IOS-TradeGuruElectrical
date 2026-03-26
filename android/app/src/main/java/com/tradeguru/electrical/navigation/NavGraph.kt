@@ -20,6 +20,11 @@ import com.tradeguru.electrical.ui.views.settings.SettingsScreen
 import com.tradeguru.electrical.ui.views.settings.SignInView
 import com.tradeguru.electrical.viewmodels.ChatViewModel
 import android.content.pm.PackageManager
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
@@ -38,24 +43,25 @@ fun NavGraph(
     navController: NavHostController = rememberNavController()
 ) {
     val authState by appModule.authManager.authState.collectAsState()
+    val isRestoringSession by appModule.authManager.isRestoringSession.collectAsState()
     val hasCompletedOnboarding by appModule.preferencesManager.hasCompletedOnboarding
         .collectAsState(initial = null)
     val hasAcceptedDisclaimer by appModule.preferencesManager.hasAcceptedDisclaimer
         .collectAsState(initial = null)
-    val hasSkippedLogin by appModule.preferencesManager.hasSkippedLogin
-        .collectAsState(initial = null)
 
     val onboardingDone = hasCompletedOnboarding
     val disclaimerDone = hasAcceptedDisclaimer
-    val loginSkipped = hasSkippedLogin
 
-    if (onboardingDone == null || disclaimerDone == null || loginSkipped == null) {
+    if (isRestoringSession || onboardingDone == null || disclaimerDone == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
         return
     }
 
     val isLoggedIn = authState is AuthState.Authenticated
     val startDestination = when {
-        !isLoggedIn && !loginSkipped -> Routes.LOGIN
+        !isLoggedIn -> Routes.LOGIN
         !onboardingDone -> Routes.ONBOARDING
         !disclaimerDone -> Routes.DISCLAIMER
         else -> Routes.CHAT
@@ -89,12 +95,7 @@ fun NavGraph(
                 onEmailSignIn = {
                     appModule.authManager.startSignIn(context)
                 },
-                onDismiss = {
-                    scope.launch { appModule.preferencesManager.setSkippedLogin(true) }
-                    navController.navigate(Routes.ONBOARDING) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                }
+                showDismiss = false
             )
         }
 
@@ -154,6 +155,7 @@ fun NavGraph(
                 onSignIn = { navController.navigate(Routes.SIGN_IN) },
                 onSignOut = {
                     appModule.authManager.signOut()
+                    scope.launch { appModule.preferencesManager.setSkippedLogin(false) }
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }

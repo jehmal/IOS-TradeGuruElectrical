@@ -39,6 +39,9 @@ class AuthManager(
     private val _authError = MutableStateFlow<String?>(null)
     val authError: StateFlow<String?> = _authError
 
+    private val _isRestoringSession = MutableStateFlow(true)
+    val isRestoringSession: StateFlow<Boolean> = _isRestoringSession
+
     val currentJwt: String? get() = keychainHelper.load("access_token")
 
     val currentUser: AuthUser?
@@ -145,21 +148,25 @@ class AuthManager(
     }
 
     suspend fun restoreSession() {
-        val accessToken = keychainHelper.load("access_token") ?: return
-        val refreshToken = keychainHelper.load("refresh_token") ?: return
-        val savedUser = keychainHelper.load("user", AuthUser::class.java)
+        try {
+            val accessToken = keychainHelper.load("access_token") ?: return
+            val refreshToken = keychainHelper.load("refresh_token") ?: return
+            val savedUser = keychainHelper.load("user", AuthUser::class.java)
 
-        val expiry = JWTDecoder.getExpiry(accessToken)
-        if (expiry != null && expiry > System.currentTimeMillis()) {
-            val user = savedUser ?: JWTDecoder.decode(accessToken) ?: return
-            _authState.value = AuthState.Authenticated(user)
-            linkDevice()
-        } else {
-            try {
-                refreshTokenWithValue(refreshToken)
-            } catch (_: Exception) {
-                signOut()
+            val expiry = JWTDecoder.getExpiry(accessToken)
+            if (expiry != null && expiry > System.currentTimeMillis()) {
+                val user = savedUser ?: JWTDecoder.decode(accessToken) ?: return
+                _authState.value = AuthState.Authenticated(user)
+                linkDevice()
+            } else {
+                try {
+                    refreshTokenWithValue(refreshToken)
+                } catch (_: Exception) {
+                    signOut()
+                }
             }
+        } finally {
+            _isRestoringSession.value = false
         }
     }
 

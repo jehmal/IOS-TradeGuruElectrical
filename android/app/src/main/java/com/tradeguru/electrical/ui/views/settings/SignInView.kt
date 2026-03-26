@@ -46,7 +46,8 @@ fun SignInView(
     onGoogleSignIn: () -> Unit,
     onAppleSignIn: () -> Unit,
     onEmailSignIn: () -> Unit,
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
+    showDismiss: Boolean = true
 ) {
     val colors = LocalTradeGuruColors.current
 
@@ -55,12 +56,14 @@ fun SignInView(
             TopAppBar(
                 title = { Text("Sign In") },
                 actions = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = colors.tradeTextSecondary
-                        )
+                    if (showDismiss) {
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = colors.tradeTextSecondary
+                            )
+                        }
                     }
                 }
             )
