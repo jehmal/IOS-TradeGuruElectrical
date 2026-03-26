@@ -80,12 +80,46 @@ class AuthManager(
     }
 
     suspend fun handleAuthCallback(uri: Uri) {
-        val code = uri.getQueryParameter("code") ?: return
-        val verifier = keychainHelper.load("pkce_verifier") ?: return
+        val error = uri.getQueryParameter("error")
+        if (error != null) {
+            val desc = uri.getQueryParameter("error_description") ?: error
+            _authError.value = "Sign in failed: $desc"
+            return
+        }
+
+        val code = uri.getQueryParameter("code")
+        if (code == null) {
+            _authError.value = "Sign in failed: no authorization code received"
+            return
+        }
+
+        val verifier = keychainHelper.load("pkce_verifier")
+        if (verifier == null) {
+            _authError.value = "Sign in failed: PKCE verifier lost"
+            return
+        }
 
         try {
             val tokens = exchangeCode(code, verifier)
-            val user = JWTDecoder.decode(tokens.accessToken) ?: return
+
+            val user = if (tokens.user != null) {
+                AuthUser(
+                    id = tokens.user.id,
+                    email = tokens.user.email,
+                    name = listOfNotNull(
+                        tokens.user.firstName,
+                        tokens.user.lastName
+                    ).joinToString(" ").ifEmpty { null },
+                    pictureURL = tokens.user.profilePictureUrl
+                )
+            } else {
+                JWTDecoder.decode(tokens.accessToken)
+            }
+
+            if (user == null) {
+                _authError.value = "Sign in failed: could not extract user info"
+                return
+            }
 
             keychainHelper.save("access_token", tokens.accessToken)
             keychainHelper.save("refresh_token", tokens.refreshToken)
@@ -155,15 +189,19 @@ class AuthManager(
 
             val expiry = JWTDecoder.getExpiry(accessToken)
             if (expiry != null && expiry > System.currentTimeMillis()) {
-                val user = savedUser ?: JWTDecoder.decode(accessToken) ?: return
+                val user = savedUser
+                    ?: JWTDecoder.decode(accessToken)
+                    ?: return
                 _authState.value = AuthState.Authenticated(user)
                 linkDevice()
-            } else {
+            } else if (refreshToken.isNotEmpty()) {
                 try {
                     refreshTokenWithValue(refreshToken)
                 } catch (_: Exception) {
                     signOut()
                 }
+            } else {
+                signOut()
             }
         } finally {
             _isRestoringSession.value = false
@@ -182,6 +220,7 @@ class AuthManager(
     private suspend fun refreshTokenWithValue(refreshToken: String) {
         val tokens = exchangeRefresh(refreshToken)
         val user = JWTDecoder.decode(tokens.accessToken)
+            ?: keychainHelper.load("user", AuthUser::class.java)
         if (user == null) {
             signOut()
             return
@@ -260,5 +299,14 @@ class AuthManager(
 
 private data class TokenResponse(
     @SerializedName("access_token") val accessToken: String,
-    @SerializedName("refresh_token") val refreshToken: String
+    @SerializedName("refresh_token") val refreshToken: String,
+    val user: WorkOSUser? = null
+)
+
+private data class WorkOSUser(
+    val id: String,
+    val email: String,
+    @SerializedName("first_name") val firstName: String? = null,
+    @SerializedName("last_name") val lastName: String? = null,
+    @SerializedName("profile_picture_url") val profilePictureUrl: String? = null
 )
