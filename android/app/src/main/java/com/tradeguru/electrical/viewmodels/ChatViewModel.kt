@@ -132,8 +132,15 @@ class ChatViewModel(
     }
 
     fun selectConversation(conversation: DomainMappers.Conversation) {
-        conversationManager.selectConversation(conversation)
-        engine.resetForNewConversation()
+        viewModelScope.launch {
+            val fullConversation = conversationManager.loadConversation(conversation.id)
+            if (fullConversation != null) {
+                conversationManager.selectConversation(fullConversation)
+            } else {
+                conversationManager.selectConversation(conversation)
+            }
+            engine.resetForNewConversation()
+        }
     }
 
     fun deleteConversation(conversation: DomainMappers.Conversation) {

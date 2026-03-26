@@ -149,6 +149,8 @@ class ConversationManager(private val database: TradeGuruDatabase) {
                 updatedAt = System.currentTimeMillis()
             )
         )
+
+        _activeConversation.value = loadConversation(conversationId)
     }
 
     suspend fun newConversation(mode: ThinkingMode) {
