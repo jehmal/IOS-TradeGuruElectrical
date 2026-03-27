@@ -25,9 +25,9 @@ enum ThinkingMode: String, CaseIterable, Identifiable, Codable, Sendable {
 
     nonisolated var icon: String {
         switch self {
-        case .faultFinder: "bolt.fill"
-        case .learn: "book.fill"
-        case .research: "magnifyingglass"
+        case .faultFinder: "wrench.and.screwdriver"
+        case .learn: "lightbulb"
+        case .research: "doc.text.magnifyingglass"
         }
     }
 

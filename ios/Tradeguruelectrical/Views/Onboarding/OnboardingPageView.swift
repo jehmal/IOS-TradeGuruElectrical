@@ -38,7 +38,7 @@ struct OnboardingPageView: View {
 
 #Preview {
     OnboardingPageView(
-        icon: "bolt.fill",
+        icon: "wrench.and.screwdriver",
         title: "Fault Finder",
         description: "Diagnose electrical faults, trace circuits, and identify issues with AI-assisted troubleshooting.",
         color: .modeFaultFinder
